@@ -54,7 +54,10 @@ public final class CaptureHandler {
             return false;
         }
 
-        CompoundTag entityData = target.saveWithoutId(new CompoundTag());
+        CompoundTag entityData = new CompoundTag();
+        if (!target.save(entityData)) {
+            return false;
+        }
         String job = entityData.getCompound("spiritJob").getString("factoryId");
         if (!job.startsWith(CrusherType.CRUSHER_JOB_PREFIX)) {
             return false;

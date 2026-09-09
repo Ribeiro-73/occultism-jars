@@ -6,7 +6,16 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "occultismjars:crusher_jar"
+          "name": "occultismjars:crusher_jar",
+          "functions": [
+            {
+              "function": "minecraft:copy_components",
+              "source": "block_entity",
+              "include": [
+                "occultismjars:contained_crusher"
+              ]
+            }
+          ]
         }
       ],
       "conditions": [

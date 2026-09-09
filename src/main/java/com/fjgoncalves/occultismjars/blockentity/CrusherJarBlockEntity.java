@@ -32,6 +32,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -50,6 +51,28 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
 
     private CompoundTag contained;
     private int progress;
+    private int maxProgress;
+
+    private final ContainerData dataAccess = new ContainerData() {
+        @Override
+        public int get(int index) {
+            return index == 0 ? progress : maxProgress;
+        }
+
+        @Override
+        public void set(int index, int value) {
+            if (index == 0) {
+                progress = value;
+            } else {
+                maxProgress = value;
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return 2;
+        }
+    };
 
     private final ItemStackHandler inventory = new ItemStackHandler(SLOT_COUNT) {
         @Override
@@ -77,6 +100,10 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
         return this.inventory;
     }
 
+    public ContainerData getDataAccess() {
+        return this.dataAccess;
+    }
+
     public boolean isEmpty() {
         return this.contained == null;
     }
@@ -98,9 +125,14 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
     public CompoundTag takeContained() {
         CompoundTag taken = this.contained;
         this.contained = null;
-        this.progress = 0;
+        this.stopProgress();
         this.onContentsChanged();
         return taken;
+    }
+
+    private void stopProgress() {
+        this.progress = 0;
+        this.maxProgress = 0;
     }
 
     private void onContentsChanged() {
@@ -161,13 +193,13 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, CrusherJarBlockEntity jar) {
         if (jar.isEmpty()) {
-            jar.progress = 0;
+            jar.stopProgress();
             return;
         }
 
         ItemStack input = jar.inventory.getStackInSlot(INPUT_SLOT);
         if (input.isEmpty()) {
-            jar.progress = 0;
+            jar.stopProgress();
             return;
         }
 
@@ -176,7 +208,7 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
         Optional<RecipeHolder<CrushingRecipe>> match = level.getRecipeManager()
                 .getRecipeFor(OccultismRecipes.CRUSHING_TYPE.get(), new TieredSingleRecipeInput(input, tier), level);
         if (match.isEmpty()) {
-            jar.progress = 0;
+            jar.stopProgress();
             return;
         }
 
@@ -187,11 +219,12 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
         result.setCount(Mth.floor(result.getCount() * operations * outputMultiplier));
 
         if (result.isEmpty() || !jar.canFitInOutput(result)) {
-            jar.progress = 0;
+            jar.stopProgress();
             return;
         }
 
         int needed = Math.max(1, Mth.ceil(recipe.getCrushingTime() * settings.timeMultiplier.get().floatValue()));
+        jar.maxProgress = needed;
         jar.progress++;
         if (jar.progress % 40 == 0) {
             playCrunch(level, pos);

@@ -9,6 +9,8 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -19,15 +21,21 @@ public class CrusherJarMenu extends AbstractContainerMenu {
 
     private final CrusherJarBlockEntity jar;
     private final BlockPos pos;
+    private final ContainerData data;
 
     public CrusherJarMenu(int id, Inventory playerInv, RegistryFriendlyByteBuf buf) {
-        this(id, playerInv, resolve(playerInv, buf.readBlockPos()));
+        this(id, playerInv, resolve(playerInv, buf.readBlockPos()), new SimpleContainerData(2));
     }
 
     public CrusherJarMenu(int id, Inventory playerInv, CrusherJarBlockEntity jar) {
+        this(id, playerInv, jar, jar.getDataAccess());
+    }
+
+    private CrusherJarMenu(int id, Inventory playerInv, CrusherJarBlockEntity jar, ContainerData data) {
         super(OccultismJars.CRUSHER_JAR_MENU.get(), id);
         this.jar = jar;
         this.pos = jar.getBlockPos();
+        this.data = data;
 
         IItemHandler inv = jar.getInventory();
         this.addSlot(new SlotItemHandler(inv, CrusherJarBlockEntity.INPUT_SLOT, 134, 26) {
@@ -57,6 +65,16 @@ public class CrusherJarMenu extends AbstractContainerMenu {
         for (int col = 0; col < 9; col++) {
             this.addSlot(new Slot(playerInv, col, 8 + col * 18, 142));
         }
+
+        this.addDataSlots(this.data);
+    }
+
+    public int getProgress() {
+        return this.data.get(0);
+    }
+
+    public int getMaxProgress() {
+        return this.data.get(1);
     }
 
     private static CrusherJarBlockEntity resolve(Inventory playerInv, BlockPos pos) {

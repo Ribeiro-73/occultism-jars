@@ -43,10 +43,18 @@ public class CrusherJarScreen extends AbstractContainerScreen<CrusherJarMenu> {
         graphics.blit(TEXTURE, x + 133, y + 25, SLOT_SRC_X, SLOT_SRC_Y, 18, 18, 256, 256);
         graphics.blit(TEXTURE, x + 133, y + 53, SLOT_SRC_X, SLOT_SRC_Y, 18, 18, 256, 256);
 
-        graphics.fill(x + 141, y + 44, x + 143, y + 52, 0xFF555555);
-        graphics.fill(x + 139, y + 48, x + 145, y + 50, 0xFF555555);
-
+        renderProgress(graphics, x, y);
         renderPortrait(graphics);
+    }
+
+    private void renderProgress(GuiGraphics graphics, int x, int y) {
+        graphics.fill(x + 140, y + 42, x + 145, y + 54, 0xFF373737);
+        int max = this.menu.getMaxProgress();
+        int p = this.menu.getProgress();
+        if (max > 0 && p > 0) {
+            int h = Math.max(1, Math.round(12.0F * Math.min(p, max) / max));
+            graphics.fill(x + 141, y + 42, x + 144, y + 42 + h, 0xFFB98FE0);
+        }
     }
 
     private void renderPortrait(GuiGraphics graphics) {

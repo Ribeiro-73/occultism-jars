@@ -1,4 +1,5 @@
 {
   "itemGroup.occultismjars": "Occultism Jars",
-  "block.occultismjars.crusher_jar": "Crusher Jar"
+  "block.occultismjars.crusher_jar": "Crusher Jar",
+  "tooltip.occultismjars.contains": "Contains: %s"
 }

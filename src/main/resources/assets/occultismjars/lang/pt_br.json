@@ -1,4 +1,5 @@
 {
   "itemGroup.occultismjars": "Occultism Jars",
-  "block.occultismjars.crusher_jar": "Jarro Triturador"
+  "block.occultismjars.crusher_jar": "Jarro Triturador",
+  "tooltip.occultismjars.contains": "Contém: %s"
 }

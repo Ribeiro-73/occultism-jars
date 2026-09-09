@@ -2,10 +2,10 @@ package com.fjgoncalves.occultismjars;
 
 import com.fjgoncalves.occultismjars.block.CrusherJarBlock;
 import com.fjgoncalves.occultismjars.blockentity.CrusherJarBlockEntity;
+import com.fjgoncalves.occultismjars.item.CrusherJarItem;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.ItemStack;
@@ -41,8 +41,8 @@ public final class OccultismJars {
                     .sound(SoundType.DECORATED_POT)
                     .noOcclusion());
 
-    public static final DeferredItem<BlockItem> CRUSHER_JAR_ITEM =
-            ITEMS.registerSimpleBlockItem("crusher_jar", CRUSHER_JAR);
+    public static final DeferredItem<CrusherJarItem> CRUSHER_JAR_ITEM =
+            ITEMS.registerItem("crusher_jar", props -> new CrusherJarItem(CRUSHER_JAR.get(), props));
 
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
             DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MODID);
@@ -65,6 +65,7 @@ public final class OccultismJars {
         ITEMS.register(modEventBus);
         BLOCK_ENTITIES.register(modEventBus);
         CREATIVE_TABS.register(modEventBus);
+        ModComponents.COMPONENTS.register(modEventBus);
 
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }

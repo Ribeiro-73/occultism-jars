@@ -32,7 +32,7 @@ public class CrusherJarRenderer implements BlockEntityRenderer<CrusherJarBlockEn
 
         pose.pushPose();
         pose.translate(0.5F, 0.05F, 0.5F);
-        pose.scale(0.42F, 0.42F, 0.42F);
+        pose.scale(0.30F, 0.30F, 0.30F);
 
         this.entityRenderer.setRenderShadow(false);
         try {

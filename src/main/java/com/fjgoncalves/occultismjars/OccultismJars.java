@@ -1,6 +1,7 @@
 package com.fjgoncalves.occultismjars;
 
 import com.fjgoncalves.occultismjars.block.CrusherJarBlock;
+import com.fjgoncalves.occultismjars.blockentity.CrusherJarBlockEntity;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -9,6 +10,7 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.bus.api.IEventBus;
@@ -42,6 +44,13 @@ public final class OccultismJars {
     public static final DeferredItem<BlockItem> CRUSHER_JAR_ITEM =
             ITEMS.registerSimpleBlockItem("crusher_jar", CRUSHER_JAR);
 
+    public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
+            DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MODID);
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CrusherJarBlockEntity>> CRUSHER_JAR_BE =
+            BLOCK_ENTITIES.register("crusher_jar",
+                    () -> BlockEntityType.Builder.of(CrusherJarBlockEntity::new, CRUSHER_JAR.get()).build(null));
+
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = CREATIVE_TABS.register(
             "main",
             () -> CreativeModeTab.builder()
@@ -54,6 +63,7 @@ public final class OccultismJars {
     public OccultismJars(IEventBus modEventBus, ModContainer modContainer) {
         BLOCKS.register(modEventBus);
         ITEMS.register(modEventBus);
+        BLOCK_ENTITIES.register(modEventBus);
         CREATIVE_TABS.register(modEventBus);
 
         modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);

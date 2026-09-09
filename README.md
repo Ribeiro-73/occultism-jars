@@ -1,5 +1,7 @@
 # Occultism Jars
 
+[![build](https://github.com/Ribeiro-73/occultism-jars/actions/workflows/build.yml/badge.svg)](https://github.com/Ribeiro-73/occultism-jars/actions/workflows/build.yml)
+
 An [Occultism](https://modrinth.com/mod/occultism) addon for NeoForge 1.21.1.
 
 A glass jar traps a single Crusher spirit and runs its crushing automatically, so
@@ -28,23 +30,15 @@ scattering dropped items.
 
 ## Building
 
-Requires JDK 21.
-
-The build compiles against Occultism and JEI, so put their jars in `libs/`:
-
-```
-libs/occultism-1.21.1-neoforge-1.224.4.jar
-libs/jei-1.21.1-neoforge-19.51.0.418.jar
-```
-
-Occultism is a required runtime dependency; JEI is optional (only the catalyst /
-transfer hook uses it).
+Requires JDK 21. Occultism and JEI are pulled from their mavens (Modrinth and
+BlameJared), so a plain
 
 ```bash
 ./gradlew build
 ```
 
-The finished jar is in `build/libs/`.
+produces the jar in `build/libs/`. Occultism is a required runtime dependency;
+JEI is optional (only the JEI hook uses it).
 
 ## Running in dev
 

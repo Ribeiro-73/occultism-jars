@@ -26,13 +26,13 @@ sourceSets.main.resources {
 }
 
 repositories {
-    // Modrinth: usado a partir da Parte 2 pra baixar a Occultism e dependencias.
+    // Occultism lives on the Modrinth maven
     maven {
         name = "Modrinth"
         url = "https://api.modrinth.com/maven"
         content { includeGroup "maven.modrinth" }
     }
-    // Alguns mods publicam so na BlameJared (GeckoLib etc.)
+    // JEI lives on the BlameJared maven
     maven { url = "https://maven.blamejared.com" }
 }
 
@@ -111,13 +111,11 @@ dependencies {
     // For all intends and purposes: You can treat this dependency as if it is a normal library you would use.
     implementation "net.neoforged:neoforge:${neo_version}"
 
-    // Occultism: compiled against for the crushing recipes. Provided at runtime by the
-    // modpack / the jars in run/client/mods, so it is compileOnly here.
-    // The jars live in libs/ (git-ignored) - see README.
-    compileOnly files("libs/occultism-${occultism_version}.jar")
+    // Occultism (required at runtime) - compiled against for the crushing recipes
+    compileOnly "maven.modrinth:occultism:${occultism_version}"
 
-    // JEI: compiled against for the recipe-catalyst plugin. Optional at runtime.
-    compileOnly files("libs/jei-${jei_version}.jar")
+    // JEI (optional at runtime) - the recipe-catalyst / transfer hook
+    compileOnly "mezz.jei:jei-${minecraft_version}-neoforge:${jei_version}"
 
     // Example mod dependency using a mod jar from ./libs with a flat dir repository
     // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar

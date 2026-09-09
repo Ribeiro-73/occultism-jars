@@ -42,7 +42,7 @@ public final class OccultismJars {
             BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_PURPLE)
                     .strength(1.5F)
-                    .sound(SoundType.DECORATED_POT)
+                    .sound(SoundType.GLASS)
                     .noOcclusion());
 
     public static final DeferredItem<CrusherJarItem> CRUSHER_JAR_ITEM =

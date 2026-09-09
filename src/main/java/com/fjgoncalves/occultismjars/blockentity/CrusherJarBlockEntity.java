@@ -12,6 +12,7 @@ import com.klikli_dev.occultism.config.OccultismServerConfig;
 import com.klikli_dev.occultism.crafting.recipe.CrushingRecipe;
 import com.klikli_dev.occultism.crafting.recipe.TieredSingleRecipeInput;
 import com.klikli_dev.occultism.registry.OccultismRecipes;
+import com.klikli_dev.occultism.registry.OccultismSounds;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -192,12 +193,22 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
 
         int needed = Math.max(1, Mth.ceil(recipe.getCrushingTime() * settings.timeMultiplier.get().floatValue()));
         jar.progress++;
+        if (jar.progress % 40 == 0) {
+            playCrunch(level, pos);
+        }
+
         if (jar.progress >= needed) {
             jar.progress = 0;
             jar.inventory.extractItem(INPUT_SLOT, operations, false);
             jar.pushToOutput(result);
             jar.setChanged();
+            playCrunch(level, pos);
         }
+    }
+
+    private static void playCrunch(Level level, BlockPos pos) {
+        level.playSound(null, pos, OccultismSounds.CRUNCHING.get(), SoundSource.BLOCKS,
+                1.0F, 1.0F + 0.5F * level.random.nextFloat());
     }
 
     private static OccultismServerConfig.SpiritJobSettings.TierSpiritSettings crusherSettings(int tier) {

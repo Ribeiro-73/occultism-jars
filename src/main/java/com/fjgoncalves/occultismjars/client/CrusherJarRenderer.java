@@ -19,6 +19,11 @@ public class CrusherJarRenderer implements BlockEntityRenderer<CrusherJarBlockEn
     }
 
     @Override
+    public int getViewDistance() {
+        return 24;
+    }
+
+    @Override
     public void render(CrusherJarBlockEntity jar, float partialTick, PoseStack pose, MultiBufferSource buffers,
                        int packedLight, int packedOverlay) {
         Entity spirit = jar.getDisplayEntity();
@@ -26,12 +31,9 @@ public class CrusherJarRenderer implements BlockEntityRenderer<CrusherJarBlockEn
             return;
         }
 
-        long time = jar.getLevel() != null ? jar.getLevel().getGameTime() : 0L;
-        float spin = (time + partialTick) * 2.5F;
-
         pose.pushPose();
         pose.translate(0.5F, 0.16F, 0.5F);
-        pose.mulPose(Axis.YP.rotationDegrees(spin));
+        pose.mulPose(Axis.YP.rotationDegrees(160.0F));
         pose.scale(0.25F, 0.25F, 0.25F);
 
         this.entityRenderer.setRenderShadow(false);

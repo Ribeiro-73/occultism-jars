@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "s": { "item": "minecraft:stick" },
+    "g": { "item": "occultism:spirit_attuned_gem" }
+  },
+  "pattern": [
+    "  g",
+    " g ",
+    "s  "
+  ],
+  "result": { "count": 1, "id": "occultismjars:demon_extractor_blade" }
+}

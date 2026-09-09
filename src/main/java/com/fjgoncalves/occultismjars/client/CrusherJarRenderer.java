@@ -7,6 +7,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 
 public class CrusherJarRenderer implements BlockEntityRenderer<CrusherJarBlockEntity> {
@@ -30,9 +31,12 @@ public class CrusherJarRenderer implements BlockEntityRenderer<CrusherJarBlockEn
             return;
         }
 
+        // Scale each spirit so it fills the glass to a fixed visual height, whatever its size.
+        float scale = Mth.clamp(0.8F / Math.max(spirit.getBbHeight(), 0.1F), 0.15F, 0.5F);
+
         pose.pushPose();
         pose.translate(0.5F, 0.05F, 0.5F);
-        pose.scale(0.30F, 0.30F, 0.30F);
+        pose.scale(scale, scale, scale);
 
         this.entityRenderer.setRenderShadow(false);
         try {

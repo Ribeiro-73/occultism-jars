@@ -5,6 +5,10 @@ import org.jetbrains.annotations.Nullable;
 import com.fjgoncalves.occultismjars.ModComponents;
 import com.fjgoncalves.occultismjars.OccultismJars;
 
+import org.slf4j.Logger;
+
+import com.mojang.logging.LogUtils;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentMap;
@@ -90,13 +94,21 @@ public class CrusherJarBlockEntity extends BlockEntity {
 
     // --- Processing ---------------------------------------------------------
 
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     public static void serverTick(Level level, BlockPos pos, BlockState state, CrusherJarBlockEntity jar) {
+        ItemStack input = jar.inventory.getStackInSlot(INPUT_SLOT);
+
+        if (level.getGameTime() % 40L == 0L) {
+            LOGGER.info("[occultismjars] tick @ {} empty={} input={} progress={}",
+                    pos, jar.isEmpty(), input, jar.progress);
+        }
+
         if (jar.isEmpty()) {
             jar.progress = 0;
             return;
         }
 
-        ItemStack input = jar.inventory.getStackInSlot(INPUT_SLOT);
         // TODO (next part): real occultism:crushing recipe + tier multiplier. For now: passthrough.
         ItemStack result = input.isEmpty() ? ItemStack.EMPTY : input.copyWithCount(1);
 
@@ -111,6 +123,7 @@ public class CrusherJarBlockEntity extends BlockEntity {
             jar.inventory.extractItem(INPUT_SLOT, 1, false);
             jar.pushToOutput(result);
             jar.setChanged();
+            LOGGER.info("[occultismjars] moved 1 {} to output", result.getItem());
         }
     }
 

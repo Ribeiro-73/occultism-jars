@@ -41,11 +41,6 @@ public class CrusherJarBlockEntity extends BlockEntity {
         protected void onContentsChanged(int slot) {
             setChanged();
         }
-
-        @Override
-        public boolean isItemValid(int slot, ItemStack stack) {
-            return slot == INPUT_SLOT;
-        }
     };
 
     /** What hoppers / pipes see: insert into the input slot, extract from the output slots. */
@@ -256,7 +251,7 @@ public class CrusherJarBlockEntity extends BlockEntity {
 
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
-            return slot == INPUT_SLOT && inventory.isItemValid(slot, stack);
+            return slot == INPUT_SLOT;
         }
     }
 }

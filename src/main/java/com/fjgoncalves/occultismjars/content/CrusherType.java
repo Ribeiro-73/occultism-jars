@@ -8,7 +8,7 @@ public enum CrusherType {
     AFRIT("afrit", 3),
     MARID("marid", 4);
 
-    public static final String CRUSHER_JOB = "occultism:crusher";
+    public static final String CRUSHER_JOB_PREFIX = "occultism:crush_tier";
 
     private final String spirit;
     private final int tier;

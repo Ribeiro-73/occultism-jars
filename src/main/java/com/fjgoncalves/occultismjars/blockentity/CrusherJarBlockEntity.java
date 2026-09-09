@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.fjgoncalves.occultismjars.Config;
 import com.fjgoncalves.occultismjars.ModComponents;
 import com.fjgoncalves.occultismjars.OccultismJars;
 import com.fjgoncalves.occultismjars.menu.CrusherJarMenu;
@@ -81,10 +82,10 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
         }
     };
 
-    /** What hoppers / pipes see: insert into the input slot, extract from the output slots. */
+    // what hoppers/pipes see: insert into input, extract from outputs
     private final IItemHandler automationView = new AutomationView();
 
-    /** Client-only: a frozen copy of the captured spirit, used to render it inside the jar. */
+    // client-only cache for the renderer
     private Entity displayEntity;
     private boolean displayDirty = true;
 
@@ -143,7 +144,7 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    /** Spawns the trapped spirit back into the world, handing it whatever the jar was crushing. */
+    // spawn the spirit back into the world, holding whatever was mid-crush
     public void extractSpirit() {
         if (this.level == null || this.level.isClientSide || this.contained == null) {
             return;
@@ -189,8 +190,6 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
         return new CrusherJarMenu(id, playerInventory, this);
     }
 
-    // --- Processing ---------------------------------------------------------
-
     public static void serverTick(Level level, BlockPos pos, BlockState state, CrusherJarBlockEntity jar) {
         if (jar.isEmpty()) {
             jar.stopProgress();
@@ -223,7 +222,8 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
             return;
         }
 
-        int needed = Math.max(1, Mth.ceil(recipe.getCrushingTime() * settings.timeMultiplier.get().floatValue()));
+        float timeFactor = settings.timeMultiplier.get().floatValue() * Config.JAR_TIME_MULTIPLIER.get().floatValue();
+        int needed = Math.max(1, Mth.ceil(recipe.getCrushingTime() * timeFactor));
         jar.maxProgress = needed;
         jar.progress++;
         if (jar.progress % 40 == 0) {
@@ -240,6 +240,9 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     private static void playCrunch(Level level, BlockPos pos) {
+        if (!Config.PLAY_CRUSHING_SOUND.get()) {
+            return;
+        }
         level.playSound(null, pos, OccultismSounds.CRUNCHING.get(), SoundSource.BLOCKS,
                 1.0F, 1.0F + 0.5F * level.random.nextFloat());
     }
@@ -270,7 +273,7 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
-    /** True when the jar's spirit has a matching occultism:crushing recipe for this item at its tier. */
+    // does the spirit have a crushing recipe for this item at its tier
     public boolean canCrush(ItemStack stack) {
         if (this.level == null || stack.isEmpty()) {
             return false;
@@ -281,15 +284,13 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
                 .isPresent();
     }
 
-    // --- Rendering ---------------------------------------------------------
-
     @Nullable
     public Entity getDisplayEntity() {
         if (this.contained == null) {
             this.displayEntity = null;
             return null;
         }
-        if (this.level == null || !this.level.isClientSide) {
+        if (this.level == null || !this.level.isClientSide || !Config.RENDER_TRAPPED_SPIRIT.get()) {
             return null;
         }
         if (this.displayEntity == null || this.displayDirty) {
@@ -308,8 +309,6 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
         return this.displayEntity;
     }
 
-    // --- Save / load -----------------------------------------------------
-
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
@@ -324,7 +323,7 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
-        // Always write a key so the client sync packet is never empty (empty packets are ignored).
+        // empty update packets get dropped, so always write something
         tag.putBoolean("hasCrusher", this.contained != null);
         tag.putInt("progress", this.progress);
         tag.put("inventory", this.inventory.serializeNBT(registries));
@@ -375,8 +374,6 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
     public Packet<ClientGamePacketListener> getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);
     }
-
-    // --- Automation wrapper ---------------------------------------------
 
     private final class AutomationView implements IItemHandler {
         @Override

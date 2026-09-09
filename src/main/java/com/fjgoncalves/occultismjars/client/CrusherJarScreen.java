@@ -1,5 +1,6 @@
 package com.fjgoncalves.occultismjars.client;
 
+import com.fjgoncalves.occultismjars.Config;
 import com.fjgoncalves.occultismjars.menu.CrusherJarMenu;
 import com.klikli_dev.occultism.client.gui.spirit.SpiritGui;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -39,7 +40,7 @@ public class CrusherJarScreen extends AbstractContainerScreen<CrusherJarMenu> {
         int y = this.topPos;
         graphics.blit(TEXTURE, x, y, 0.0F, 0.0F, this.imageWidth, this.imageHeight, 256, 256);
 
-        // input + first output reuse the texture's own slot graphic; the second output sits on the drawn one
+        // borrow the texture's own slot sprite for the two we place ourselves
         graphics.blit(TEXTURE, x + 133, y + 25, SLOT_SRC_X, SLOT_SRC_Y, 18, 18, 256, 256);
         graphics.blit(TEXTURE, x + 133, y + 53, SLOT_SRC_X, SLOT_SRC_Y, 18, 18, 256, 256);
 
@@ -65,7 +66,7 @@ public class CrusherJarScreen extends AbstractContainerScreen<CrusherJarMenu> {
         float height = Math.max(spirit.getBbHeight(), 0.5F);
         int scale = Mth.clamp(Math.round(40.0F / height), 8, 24);
         try {
-            // fixed pose args -> the portrait never spins to follow the cursor
+            // fixed args so it doesn't follow the mouse
             SpiritGui.drawEntityToGui(graphics, this.leftPos + 31, this.topPos + 63, scale, -62.0F, -18.0F, spirit);
         } catch (Throwable ignored) {
         }
@@ -75,7 +76,7 @@ public class CrusherJarScreen extends AbstractContainerScreen<CrusherJarMenu> {
         if (!this.portraitResolved) {
             this.portraitResolved = true;
             CompoundTag tag = this.menu.getContainedTag();
-            if (tag != null && this.minecraft != null && this.minecraft.level != null) {
+            if (tag != null && Config.RENDER_TRAPPED_SPIRIT.get() && this.minecraft != null && this.minecraft.level != null) {
                 try {
                     Entity entity = EntityType.create(tag.getCompound("data"), this.minecraft.level).orElse(null);
                     if (entity instanceof LivingEntity living) {

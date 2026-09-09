@@ -14,13 +14,38 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
 
 public class CrusherJarBlockEntity extends BlockEntity {
 
+    public static final int INPUT_SLOT = 0;
+    public static final int FIRST_OUTPUT_SLOT = 1;
+    private static final int SLOT_COUNT = 3;
+    private static final int MAX_PROGRESS = 100;
+
     private CompoundTag contained;
+    private int progress;
+
+    private final ItemStackHandler inventory = new ItemStackHandler(SLOT_COUNT) {
+        @Override
+        protected void onContentsChanged(int slot) {
+            setChanged();
+        }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return slot == INPUT_SLOT;
+        }
+    };
+
+    /** What hoppers / pipes see: insert into the input slot, extract from the output slots. */
+    private final IItemHandler automationView = new AutomationView();
 
     /** Client-only: a frozen copy of the captured spirit, used to render it inside the jar. */
     private Entity displayEntity;
@@ -28,6 +53,10 @@ public class CrusherJarBlockEntity extends BlockEntity {
 
     public CrusherJarBlockEntity(BlockPos pos, BlockState state) {
         super(OccultismJars.CRUSHER_JAR_BE.get(), pos, state);
+    }
+
+    public IItemHandler getAutomationView() {
+        return this.automationView;
     }
 
     public boolean isEmpty() {
@@ -46,6 +75,7 @@ public class CrusherJarBlockEntity extends BlockEntity {
     public CompoundTag takeContained() {
         CompoundTag taken = this.contained;
         this.contained = null;
+        this.progress = 0;
         this.onContentsChanged();
         return taken;
     }
@@ -57,6 +87,50 @@ public class CrusherJarBlockEntity extends BlockEntity {
             this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), Block.UPDATE_ALL);
         }
     }
+
+    // --- Processing ---------------------------------------------------------
+
+    public static void serverTick(Level level, BlockPos pos, BlockState state, CrusherJarBlockEntity jar) {
+        if (jar.isEmpty()) {
+            jar.progress = 0;
+            return;
+        }
+
+        ItemStack input = jar.inventory.getStackInSlot(INPUT_SLOT);
+        // TODO (next part): real occultism:crushing recipe + tier multiplier. For now: passthrough.
+        ItemStack result = input.isEmpty() ? ItemStack.EMPTY : input.copyWithCount(1);
+
+        if (result.isEmpty() || !jar.canFitInOutput(result)) {
+            jar.progress = 0;
+            return;
+        }
+
+        jar.progress++;
+        if (jar.progress >= MAX_PROGRESS) {
+            jar.progress = 0;
+            jar.inventory.extractItem(INPUT_SLOT, 1, false);
+            jar.pushToOutput(result);
+            jar.setChanged();
+        }
+    }
+
+    private boolean canFitInOutput(ItemStack stack) {
+        for (int slot = FIRST_OUTPUT_SLOT; slot < SLOT_COUNT; slot++) {
+            ItemStack remainder = this.inventory.insertItem(slot, stack, true);
+            if (remainder.isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void pushToOutput(ItemStack stack) {
+        for (int slot = FIRST_OUTPUT_SLOT; slot < SLOT_COUNT && !stack.isEmpty(); slot++) {
+            stack = this.inventory.insertItem(slot, stack, false);
+        }
+    }
+
+    // --- Rendering ---------------------------------------------------------
 
     @Nullable
     public Entity getDisplayEntity() {
@@ -83,10 +157,16 @@ public class CrusherJarBlockEntity extends BlockEntity {
         return this.displayEntity;
     }
 
+    // --- Save / load -----------------------------------------------------
+
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         this.contained = tag.contains("contained") ? tag.getCompound("contained") : null;
+        this.progress = tag.getInt("progress");
+        if (tag.contains("inventory")) {
+            this.inventory.deserializeNBT(registries, tag.getCompound("inventory"));
+        }
         this.displayDirty = true;
     }
 
@@ -95,6 +175,8 @@ public class CrusherJarBlockEntity extends BlockEntity {
         super.saveAdditional(tag, registries);
         // Always write a key so the client sync packet is never empty (empty packets are ignored).
         tag.putBoolean("hasCrusher", this.contained != null);
+        tag.putInt("progress", this.progress);
+        tag.put("inventory", this.inventory.serializeNBT(registries));
         if (this.contained != null) {
             tag.put("contained", this.contained);
         }
@@ -129,5 +211,39 @@ public class CrusherJarBlockEntity extends BlockEntity {
     @Override
     public Packet<ClientGamePacketListener> getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    // --- Automation wrapper ---------------------------------------------
+
+    private final class AutomationView implements IItemHandler {
+        @Override
+        public int getSlots() {
+            return inventory.getSlots();
+        }
+
+        @Override
+        public ItemStack getStackInSlot(int slot) {
+            return inventory.getStackInSlot(slot);
+        }
+
+        @Override
+        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+            return slot == INPUT_SLOT ? inventory.insertItem(slot, stack, simulate) : stack;
+        }
+
+        @Override
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            return slot == INPUT_SLOT ? ItemStack.EMPTY : inventory.extractItem(slot, amount, simulate);
+        }
+
+        @Override
+        public int getSlotLimit(int slot) {
+            return inventory.getSlotLimit(slot);
+        }
+
+        @Override
+        public boolean isItemValid(int slot, ItemStack stack) {
+            return slot == INPUT_SLOT && inventory.isItemValid(slot, stack);
+        }
     }
 }

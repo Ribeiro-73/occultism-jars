@@ -1,5 +1,6 @@
 package com.fjgoncalves.occultismjars.block;
 
+import com.fjgoncalves.occultismjars.OccultismJars;
 import com.fjgoncalves.occultismjars.blockentity.CrusherJarBlockEntity;
 
 import net.minecraft.core.BlockPos;
@@ -13,6 +14,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.BlockGetter;
@@ -36,6 +39,15 @@ public class CrusherJarBlock extends Block implements EntityBlock {
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new CrusherJarBlockEntity(pos, state);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        if (level.isClientSide || type != OccultismJars.CRUSHER_JAR_BE.get()) {
+            return null;
+        }
+        return (BlockEntityTicker<T>) (BlockEntityTicker<CrusherJarBlockEntity>) CrusherJarBlockEntity::serverTick;
     }
 
     @Override

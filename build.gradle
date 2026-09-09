@@ -113,15 +113,11 @@ dependencies {
 
     // Occultism: compiled against for the crushing recipes. Provided at runtime by the
     // modpack / the jars in run/client/mods, so it is compileOnly here.
-    // The jar lives in libs/ (git-ignored) - see README.
+    // The jars live in libs/ (git-ignored) - see README.
     compileOnly files("libs/occultism-${occultism_version}.jar")
 
-    // Example optional mod dependency with JEI
-    // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
-    // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"
-    // compileOnly "mezz.jei:jei-${mc_version}-neoforge-api:${jei_version}"
-    // We add the full version to localRuntime, not runtimeOnly, so that we do not publish a dependency on it
-    // localRuntime "mezz.jei:jei-${mc_version}-neoforge:${jei_version}"
+    // JEI: compiled against for the recipe-catalyst plugin. Optional at runtime.
+    compileOnly files("libs/jei-${jei_version}.jar")
 
     // Example mod dependency using a mod jar from ./libs with a flat dir repository
     // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar

@@ -33,3 +33,10 @@ ${mod_description}
     versionRange="[1.224.0,)"
     ordering="AFTER"
     side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="jei"
+    type="optional"
+    versionRange="[19.0.0,)"
+    ordering="AFTER"
+    side="CLIENT"

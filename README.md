@@ -10,11 +10,14 @@ crushing stays contained instead of scattering dropped items around.
 
 Requires JDK 21.
 
-The build compiles against Occultism, so put its jar in `libs/`:
+The build compiles against Occultism and JEI, so put their jars in `libs/`:
 
 ```
 libs/occultism-1.21.1-neoforge-1.224.4.jar
+libs/jei-1.21.1-neoforge-19.51.0.418.jar
 ```
+
+Occultism is a required dependency; JEI is optional (used only for the recipe-catalyst hook).
 
 Then:
 

@@ -92,6 +92,8 @@ public class CrusherJarBlockEntity extends BlockEntity {
     @Override
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
+        // Always write a key so the client sync packet is never empty (empty packets are ignored).
+        tag.putBoolean("hasCrusher", this.contained != null);
         if (this.contained != null) {
             tag.put("contained", this.contained);
         }
@@ -115,6 +117,7 @@ public class CrusherJarBlockEntity extends BlockEntity {
     @Override
     public void removeComponentsFromTag(CompoundTag tag) {
         tag.remove("contained");
+        tag.remove("hasCrusher");
     }
 
     @Override

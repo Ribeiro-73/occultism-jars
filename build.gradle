@@ -111,12 +111,10 @@ dependencies {
     // For all intends and purposes: You can treat this dependency as if it is a normal library you would use.
     implementation "net.neoforged:neoforge:${neo_version}"
 
-    // --- Occultism (descomente na Parte 2, quando formos usar as classes dela) ---
-    // 'compileOnly' = compila contra ela; 'localRuntime' = carrega no jogo de teste.
-    // implementation "maven.modrinth:occultism:${occultism_version}"
-    // localRuntime  "maven.modrinth:geckolib:4.7.5.1"
-    // localRuntime  "maven.modrinth:smart-brain-lib:1.16.11"
-    // localRuntime  "maven.modrinth:modonomicon:1.115.0"
+    // Occultism: compiled against for the crushing recipes. Provided at runtime by the
+    // modpack / the jars in run/client/mods, so it is compileOnly here.
+    // The jar lives in libs/ (git-ignored) - see README.
+    compileOnly files("libs/occultism-${occultism_version}.jar")
 
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime

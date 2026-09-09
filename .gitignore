@@ -43,3 +43,4 @@ repo/
 hs_err_pid*.log
 replay_pid*.log
 primeira-build.bat
+libs/

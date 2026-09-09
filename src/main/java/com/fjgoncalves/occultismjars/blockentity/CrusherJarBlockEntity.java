@@ -1,13 +1,14 @@
 package com.fjgoncalves.occultismjars.blockentity;
 
+import java.util.Optional;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.fjgoncalves.occultismjars.ModComponents;
 import com.fjgoncalves.occultismjars.OccultismJars;
-
-import org.slf4j.Logger;
-
-import com.mojang.logging.LogUtils;
+import com.klikli_dev.occultism.crafting.recipe.CrushingRecipe;
+import com.klikli_dev.occultism.crafting.recipe.TieredSingleRecipeInput;
+import com.klikli_dev.occultism.registry.OccultismRecipes;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -23,6 +24,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 
@@ -31,7 +34,11 @@ public class CrusherJarBlockEntity extends BlockEntity {
     public static final int INPUT_SLOT = 0;
     public static final int FIRST_OUTPUT_SLOT = 1;
     private static final int SLOT_COUNT = 3;
-    private static final int MAX_PROGRESS = 100;
+
+    /** Extra output per tier (Foliot/Djinni/Afrit/Marid), index by tier. */
+    private static final float[] OUTPUT_MULTIPLIER = {0F, 1.0F, 1.5F, 2.0F, 3.0F};
+    /** Crushing time multiplier per tier; lower = faster. */
+    private static final float[] TIME_FACTOR = {1F, 1.0F, 0.7F, 0.5F, 0.3F};
 
     private CompoundTag contained;
     private int progress;
@@ -89,36 +96,44 @@ public class CrusherJarBlockEntity extends BlockEntity {
 
     // --- Processing ---------------------------------------------------------
 
-    private static final Logger LOGGER = LogUtils.getLogger();
-
     public static void serverTick(Level level, BlockPos pos, BlockState state, CrusherJarBlockEntity jar) {
-        ItemStack input = jar.inventory.getStackInSlot(INPUT_SLOT);
-
-        if (level.getGameTime() % 40L == 0L) {
-            LOGGER.info("[occultismjars] tick @ {} empty={} input={} progress={}",
-                    pos, jar.isEmpty(), input, jar.progress);
-        }
-
         if (jar.isEmpty()) {
             jar.progress = 0;
             return;
         }
 
-        // TODO (next part): real occultism:crushing recipe + tier multiplier. For now: passthrough.
-        ItemStack result = input.isEmpty() ? ItemStack.EMPTY : input.copyWithCount(1);
-
-        if (result.isEmpty() || !jar.canFitInOutput(result)) {
+        ItemStack input = jar.inventory.getStackInSlot(INPUT_SLOT);
+        if (input.isEmpty()) {
             jar.progress = 0;
             return;
         }
 
+        int tier = Mth.clamp(jar.getTier(), 1, 4);
+        Optional<RecipeHolder<CrushingRecipe>> match = level.getRecipeManager()
+                .getRecipeFor(OccultismRecipes.CRUSHING_TYPE.get(), new TieredSingleRecipeInput(input, tier), level);
+        if (match.isEmpty()) {
+            jar.progress = 0;
+            return;
+        }
+
+        CrushingRecipe recipe = match.get().value();
+        ItemStack result = recipe.getResultItem(level.registryAccess()).copy();
+        if (!recipe.getIgnoreCrushingMultiplier()) {
+            result.setCount(Math.max(1, Mth.floor(result.getCount() * OUTPUT_MULTIPLIER[tier])));
+        }
+
+        if (!jar.canFitInOutput(result)) {
+            jar.progress = 0;
+            return;
+        }
+
+        int needed = Math.max(20, Mth.ceil(recipe.getCrushingTime() * TIME_FACTOR[tier]));
         jar.progress++;
-        if (jar.progress >= MAX_PROGRESS) {
+        if (jar.progress >= needed) {
             jar.progress = 0;
             jar.inventory.extractItem(INPUT_SLOT, 1, false);
             jar.pushToOutput(result);
             jar.setChanged();
-            LOGGER.info("[occultismjars] moved 1 {} to output", result.getItem());
         }
     }
 

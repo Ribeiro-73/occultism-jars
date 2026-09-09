@@ -10,6 +10,14 @@ crushing stays contained instead of scattering dropped items around.
 
 Requires JDK 21.
 
+The build compiles against Occultism, so put its jar in `libs/`:
+
+```
+libs/occultism-1.21.1-neoforge-1.224.4.jar
+```
+
+Then:
+
 ```bash
 ./gradlew build
 ```

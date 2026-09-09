@@ -1,5 +1,4 @@
 {
-  "gui_light": "front",
   "textures": {
     "0": "occultismjars:item/demon_extractor_blade_0",
     "1": "occultismjars:item/demon_extractor_blade_1",
@@ -212,12 +211,13 @@
     }
   ],
   "display": {
-    "thirdperson_righthand": { "rotation": [0, 90, 0], "translation": [-0.5, 3.75, 2] },
-    "thirdperson_lefthand": { "rotation": [0, 90, 0], "translation": [-0.5, 3.75, 2] },
-    "firstperson_righthand": { "rotation": [0, -90, 25], "translation": [1.13, 3.2, 1.13], "scale": [0.68, 0.68, 0.68] },
-    "firstperson_lefthand": { "rotation": [0, 90, -25], "translation": [1.13, 3.2, 1.13], "scale": [0.68, 0.68, 0.68] },
-    "ground": { "rotation": [0, 0, 0], "translation": [0, 3, 0], "scale": [0.5, 0.5, 0.5] },
-    "fixed": { "rotation": [0, 0, 0], "translation": [0, 0, 0], "scale": [1, 1, 1] },
-    "gui": { "rotation": [0, 0, 0], "translation": [0, -4, 0], "scale": [0.5, 0.5, 0.5] }
+    "thirdperson_righthand": { "rotation": [0, 90, 0], "translation": [-0.5, 3.25, 2] },
+    "thirdperson_lefthand": { "rotation": [-94.01, -86.99, -95.05], "translation": [0, 3.25, 2.25] },
+    "firstperson_righthand": { "rotation": [-26.66, 73.68, 9.61], "translation": [0, -1, 0] },
+    "firstperson_lefthand": { "rotation": [160.14, -76.57, 175.38] },
+    "ground": { "rotation": [24.54, -15.38, -38.54] },
+    "gui": { "rotation": [0, 0, -50.5], "translation": [-1.75, -1.75, 0], "scale": [0.7, 0.7, 1] },
+    "head": { "rotation": [0, 0, -128.25], "translation": [-6, 6, 0] },
+    "fixed": { "rotation": [0, 0, -45.5], "translation": [-1.5, -2.25, 0] }
   }
 }

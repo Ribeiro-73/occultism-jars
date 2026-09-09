@@ -1,5 +1,7 @@
 {
   "itemGroup.occultismjars": "Occultism Jars",
   "block.occultismjars.crusher_jar": "Jarro Triturador",
-  "tooltip.occultismjars.contains": "Contém: %s"
+  "item.occultismjars.demon_extractor_blade": "Lâmina Extratora de Demônios",
+  "tooltip.occultismjars.contains": "Contém: %s",
+  "tooltip.occultismjars.demon_extractor_blade": "Clique com o botão direito num Jarro Triturador pra soltar o demônio preso"
 }

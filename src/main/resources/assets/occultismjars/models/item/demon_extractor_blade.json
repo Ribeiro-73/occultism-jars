@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "occultismjars:item/demon_extractor_blade"
+  }
+}

@@ -6,6 +6,9 @@ import org.jetbrains.annotations.Nullable;
 
 import com.fjgoncalves.occultismjars.ModComponents;
 import com.fjgoncalves.occultismjars.OccultismJars;
+import com.fjgoncalves.occultismjars.menu.CrusherJarMenu;
+import com.klikli_dev.occultism.Occultism;
+import com.klikli_dev.occultism.config.OccultismServerConfig;
 import com.klikli_dev.occultism.crafting.recipe.CrushingRecipe;
 import com.klikli_dev.occultism.crafting.recipe.TieredSingleRecipeInput;
 import com.klikli_dev.occultism.registry.OccultismRecipes;
@@ -14,11 +17,20 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -29,16 +41,11 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 
-public class CrusherJarBlockEntity extends BlockEntity {
+public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
 
     public static final int INPUT_SLOT = 0;
     public static final int FIRST_OUTPUT_SLOT = 1;
-    private static final int SLOT_COUNT = 3;
-
-    /** Extra output per tier (Foliot/Djinni/Afrit/Marid), index by tier. */
-    private static final float[] OUTPUT_MULTIPLIER = {0F, 1.0F, 1.5F, 2.0F, 3.0F};
-    /** Crushing time multiplier per tier; lower = faster. */
-    private static final float[] TIME_FACTOR = {1F, 1.0F, 0.7F, 0.5F, 0.3F};
+    public static final int SLOT_COUNT = 3;
 
     private CompoundTag contained;
     private int progress;
@@ -65,8 +72,17 @@ public class CrusherJarBlockEntity extends BlockEntity {
         return this.automationView;
     }
 
+    public IItemHandler getInventory() {
+        return this.inventory;
+    }
+
     public boolean isEmpty() {
         return this.contained == null;
+    }
+
+    @Nullable
+    public CompoundTag getContainedTag() {
+        return this.contained;
     }
 
     public int getTier() {
@@ -94,6 +110,52 @@ public class CrusherJarBlockEntity extends BlockEntity {
         }
     }
 
+    /** Spawns the trapped spirit back into the world, handing it whatever the jar was crushing. */
+    public void extractSpirit() {
+        if (this.level == null || this.level.isClientSide || this.contained == null) {
+            return;
+        }
+        EntityType.create(this.contained.getCompound("data"), this.level).ifPresent(spirit -> {
+            ItemStack held = this.inventory.extractItem(INPUT_SLOT, Integer.MAX_VALUE, false);
+            if (!held.isEmpty()) {
+                if (spirit instanceof LivingEntity living) {
+                    living.setItemInHand(InteractionHand.MAIN_HAND, held);
+                } else {
+                    Block.popResource(this.level, this.worldPosition.above(), held);
+                }
+            }
+            spirit.moveTo(this.worldPosition.getX() + 0.5, this.worldPosition.getY() + 1.0, this.worldPosition.getZ() + 0.5,
+                    spirit.getYRot(), spirit.getXRot());
+            this.level.addFreshEntity(spirit);
+        });
+        this.level.playSound(null, this.worldPosition, SoundEvents.BOTTLE_EMPTY, SoundSource.BLOCKS, 1.0F, 1.0F);
+        this.takeContained();
+    }
+
+    public void dropInventory() {
+        if (this.level == null) {
+            return;
+        }
+        for (int slot = 0; slot < this.inventory.getSlots(); slot++) {
+            ItemStack stack = this.inventory.getStackInSlot(slot);
+            if (!stack.isEmpty()) {
+                Block.popResource(this.level, this.worldPosition, stack);
+                this.inventory.setStackInSlot(slot, ItemStack.EMPTY);
+            }
+        }
+    }
+
+    @Override
+    public Component getDisplayName() {
+        return Component.translatable("block.occultismjars.crusher_jar");
+    }
+
+    @Nullable
+    @Override
+    public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player player) {
+        return new CrusherJarMenu(id, playerInventory, this);
+    }
+
     // --- Processing ---------------------------------------------------------
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, CrusherJarBlockEntity jar) {
@@ -108,7 +170,8 @@ public class CrusherJarBlockEntity extends BlockEntity {
             return;
         }
 
-        int tier = Mth.clamp(jar.getTier(), 1, 4);
+        var settings = crusherSettings(Mth.clamp(jar.getTier(), 1, 4));
+        int tier = settings.tier.get();
         Optional<RecipeHolder<CrushingRecipe>> match = level.getRecipeManager()
                 .getRecipeFor(OccultismRecipes.CRUSHING_TYPE.get(), new TieredSingleRecipeInput(input, tier), level);
         if (match.isEmpty()) {
@@ -117,24 +180,34 @@ public class CrusherJarBlockEntity extends BlockEntity {
         }
 
         CrushingRecipe recipe = match.get().value();
+        float outputMultiplier = recipe.getIgnoreCrushingMultiplier() ? 1.0F : settings.outputMultiplier.get().floatValue();
+        int operations = Math.min(settings.operationCount.get(), input.getCount());
         ItemStack result = recipe.getResultItem(level.registryAccess()).copy();
-        if (!recipe.getIgnoreCrushingMultiplier()) {
-            result.setCount(Math.max(1, Mth.floor(result.getCount() * OUTPUT_MULTIPLIER[tier])));
-        }
+        result.setCount(Mth.floor(result.getCount() * operations * outputMultiplier));
 
-        if (!jar.canFitInOutput(result)) {
+        if (result.isEmpty() || !jar.canFitInOutput(result)) {
             jar.progress = 0;
             return;
         }
 
-        int needed = Math.max(20, Mth.ceil(recipe.getCrushingTime() * TIME_FACTOR[tier]));
+        int needed = Math.max(1, Mth.ceil(recipe.getCrushingTime() * settings.timeMultiplier.get().floatValue()));
         jar.progress++;
         if (jar.progress >= needed) {
             jar.progress = 0;
-            jar.inventory.extractItem(INPUT_SLOT, 1, false);
+            jar.inventory.extractItem(INPUT_SLOT, operations, false);
             jar.pushToOutput(result);
             jar.setChanged();
         }
+    }
+
+    private static OccultismServerConfig.SpiritJobSettings.TierSpiritSettings crusherSettings(int tier) {
+        var jobs = Occultism.SERVER_CONFIG.spiritJobs;
+        return switch (tier) {
+            case 2 -> jobs.crusherDjinni;
+            case 3 -> jobs.crusherAfrit;
+            case 4 -> jobs.crusherMarid;
+            default -> jobs.crusherFoliot;
+        };
     }
 
     private boolean canFitInOutput(ItemStack stack) {
@@ -151,6 +224,17 @@ public class CrusherJarBlockEntity extends BlockEntity {
         for (int slot = FIRST_OUTPUT_SLOT; slot < SLOT_COUNT && !stack.isEmpty(); slot++) {
             stack = this.inventory.insertItem(slot, stack, false);
         }
+    }
+
+    /** True when the jar's spirit has a matching occultism:crushing recipe for this item at its tier. */
+    public boolean canCrush(ItemStack stack) {
+        if (this.level == null || stack.isEmpty()) {
+            return false;
+        }
+        int tier = crusherSettings(Mth.clamp(this.getTier(), 1, 4)).tier.get();
+        return this.level.getRecipeManager()
+                .getRecipeFor(OccultismRecipes.CRUSHING_TYPE.get(), new TieredSingleRecipeInput(stack, tier), this.level)
+                .isPresent();
     }
 
     // --- Rendering ---------------------------------------------------------
@@ -209,7 +293,19 @@ public class CrusherJarBlockEntity extends BlockEntity {
     protected void applyImplicitComponents(DataComponentInput input) {
         super.applyImplicitComponents(input);
         CompoundTag stored = input.get(ModComponents.CONTAINED_CRUSHER.get());
-        this.contained = stored != null ? stored.copy() : null;
+        if (stored == null) {
+            this.contained = null;
+            return;
+        }
+        this.contained = stored.copy();
+        CompoundTag heldTag = this.contained.contains("heldItem") ? this.contained.getCompound("heldItem") : null;
+        this.contained.remove("heldItem");
+        if (heldTag != null && this.level != null && this.inventory.getStackInSlot(INPUT_SLOT).isEmpty()) {
+            ItemStack held = ItemStack.parseOptional(this.level.registryAccess(), heldTag);
+            if (!held.isEmpty()) {
+                this.inventory.setStackInSlot(INPUT_SLOT, held);
+            }
+        }
     }
 
     @Override
@@ -251,7 +347,10 @@ public class CrusherJarBlockEntity extends BlockEntity {
 
         @Override
         public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-            return slot == INPUT_SLOT ? inventory.insertItem(slot, stack, simulate) : stack;
+            if (slot != INPUT_SLOT || !canCrush(stack)) {
+                return stack;
+            }
+            return inventory.insertItem(slot, stack, simulate);
         }
 
         @Override
@@ -266,7 +365,7 @@ public class CrusherJarBlockEntity extends BlockEntity {
 
         @Override
         public boolean isItemValid(int slot, ItemStack stack) {
-            return slot == INPUT_SLOT;
+            return slot == INPUT_SLOT && canCrush(stack);
         }
     }
 }

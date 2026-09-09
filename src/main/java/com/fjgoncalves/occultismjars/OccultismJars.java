@@ -3,9 +3,12 @@ package com.fjgoncalves.occultismjars;
 import com.fjgoncalves.occultismjars.block.CrusherJarBlock;
 import com.fjgoncalves.occultismjars.blockentity.CrusherJarBlockEntity;
 import com.fjgoncalves.occultismjars.item.CrusherJarItem;
+import com.fjgoncalves.occultismjars.item.DemonExtractorBladeItem;
+import com.fjgoncalves.occultismjars.menu.CrusherJarMenu;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.ItemStack;
@@ -17,6 +20,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.registries.DeferredBlock;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredItem;
@@ -44,6 +48,9 @@ public final class OccultismJars {
     public static final DeferredItem<CrusherJarItem> CRUSHER_JAR_ITEM =
             ITEMS.registerItem("crusher_jar", props -> new CrusherJarItem(CRUSHER_JAR.get(), props));
 
+    public static final DeferredItem<DemonExtractorBladeItem> DEMON_EXTRACTOR_BLADE =
+            ITEMS.registerItem("demon_extractor_blade", DemonExtractorBladeItem::new);
+
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
             DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MODID);
 
@@ -51,19 +58,29 @@ public final class OccultismJars {
             BLOCK_ENTITIES.register("crusher_jar",
                     () -> BlockEntityType.Builder.of(CrusherJarBlockEntity::new, CRUSHER_JAR.get()).build(null));
 
+    public static final DeferredRegister<MenuType<?>> MENUS =
+            DeferredRegister.create(Registries.MENU, MODID);
+
+    public static final DeferredHolder<MenuType<?>, MenuType<CrusherJarMenu>> CRUSHER_JAR_MENU =
+            MENUS.register("crusher_jar", () -> IMenuTypeExtension.create(CrusherJarMenu::new));
+
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = CREATIVE_TABS.register(
             "main",
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup." + MODID))
                     .withTabsBefore(CreativeModeTabs.SPAWN_EGGS)
                     .icon(() -> new ItemStack(CRUSHER_JAR_ITEM.get()))
-                    .displayItems((params, output) -> output.accept(CRUSHER_JAR_ITEM.get()))
+                    .displayItems((params, output) -> {
+                        output.accept(CRUSHER_JAR_ITEM.get());
+                        output.accept(DEMON_EXTRACTOR_BLADE.get());
+                    })
                     .build());
 
     public OccultismJars(IEventBus modEventBus, ModContainer modContainer) {
         BLOCKS.register(modEventBus);
         ITEMS.register(modEventBus);
         BLOCK_ENTITIES.register(modEventBus);
+        MENUS.register(modEventBus);
         CREATIVE_TABS.register(modEventBus);
         ModComponents.COMPONENTS.register(modEventBus);
 

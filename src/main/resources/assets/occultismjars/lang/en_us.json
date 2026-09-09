@@ -1,5 +1,7 @@
 {
   "itemGroup.occultismjars": "Occultism Jars",
   "block.occultismjars.crusher_jar": "Crusher Jar",
-  "tooltip.occultismjars.contains": "Contains: %s"
+  "item.occultismjars.demon_extractor_blade": "Demon Extractor Blade",
+  "tooltip.occultismjars.contains": "Contains: %s",
+  "tooltip.occultismjars.demon_extractor_blade": "Right-click a Crusher Jar to release its demon"
 }

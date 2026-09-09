@@ -9,8 +9,10 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.EventPriority;
@@ -54,12 +56,27 @@ public final class CaptureHandler {
             return false;
         }
 
-        CompoundTag entityData = new CompoundTag();
-        if (!target.save(entityData)) {
+        CompoundTag probe = new CompoundTag();
+        if (!target.save(probe)) {
             return false;
         }
-        String job = entityData.getCompound("spiritJob").getString("factoryId");
+        String job = probe.getCompound("spiritJob").getString("factoryId");
         if (!job.startsWith(CrusherType.CRUSHER_JOB_PREFIX)) {
+            return false;
+        }
+
+        // Take whatever the crusher was working on off the entity so it lands in the jar's
+        // input slot instead of vanishing into the stored NBT. It goes back to its hand on release.
+        ItemStack crushing = ItemStack.EMPTY;
+        if (target instanceof LivingEntity living) {
+            crushing = living.getMainHandItem().copy();
+            if (!crushing.isEmpty()) {
+                living.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+            }
+        }
+
+        CompoundTag entityData = new CompoundTag();
+        if (!target.save(entityData)) {
             return false;
         }
 
@@ -67,6 +84,9 @@ public final class CaptureHandler {
         stored.putInt("tier", type.tier());
         stored.putString("entity", entityId.toString());
         stored.put("data", entityData);
+        if (!crushing.isEmpty()) {
+            stored.put("heldItem", crushing.save(player.level().registryAccess()));
+        }
 
         ItemStack filled = stack.copyWithCount(1);
         filled.set(ModComponents.CONTAINED_CRUSHER.get(), stored);

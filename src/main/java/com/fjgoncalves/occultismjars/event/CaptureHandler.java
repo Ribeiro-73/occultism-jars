@@ -50,8 +50,7 @@ public final class CaptureHandler {
             return false;
         }
 
-        // The spirit's job NBT only exists on the server. Let the click through on the
-        // client so the interaction packet still reaches the server.
+        // job nbt is server-only; let the click through so the packet still reaches the server
         if (player.level().isClientSide()) {
             return false;
         }
@@ -65,8 +64,7 @@ public final class CaptureHandler {
             return false;
         }
 
-        // Take whatever the crusher was working on off the entity so it lands in the jar's
-        // input slot instead of vanishing into the stored NBT. It goes back to its hand on release.
+        // pull the in-progress item off the entity so it becomes the jar's input (given back on release)
         ItemStack crushing = ItemStack.EMPTY;
         if (target instanceof LivingEntity living) {
             crushing = living.getMainHandItem().copy();

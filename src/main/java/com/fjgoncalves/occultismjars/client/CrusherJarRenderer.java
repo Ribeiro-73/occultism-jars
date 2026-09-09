@@ -31,7 +31,7 @@ public class CrusherJarRenderer implements BlockEntityRenderer<CrusherJarBlockEn
             return;
         }
 
-        // Scale each spirit so it fills the glass to a fixed visual height, whatever its size.
+        // fixed on-screen height regardless of the spirit's real size
         float scale = Mth.clamp(0.8F / Math.max(spirit.getBbHeight(), 0.1F), 0.15F, 0.5F);
 
         pose.pushPose();
@@ -42,7 +42,7 @@ public class CrusherJarRenderer implements BlockEntityRenderer<CrusherJarBlockEn
         try {
             this.entityRenderer.render(spirit, 0.0, 0.0, 0.0, 0.0F, 0.0F, pose, buffers, packedLight);
         } catch (Exception ignored) {
-            // Some entity renderers dislike being drawn outside a live world; skip quietly.
+            // some renderers choke on an entity that isn't in a real world
         }
         this.entityRenderer.setRenderShadow(true);
 

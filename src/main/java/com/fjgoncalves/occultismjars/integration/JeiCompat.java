@@ -33,7 +33,7 @@ public class JeiCompat implements IModPlugin {
 
     @Override
     public void registerRecipeTransferHandlers(IRecipeTransferRegistration registration) {
-        // recipe input -> the jar's single input slot; pull from the player inventory slots
+        // recipe input -> slot 0, pull from the player inventory range
         registration.addRecipeTransferHandler(CrusherJarMenu.class, OccultismJars.CRUSHER_JAR_MENU.get(),
                 OCCULTISM_CRUSHING, CrusherJarBlockEntity.INPUT_SLOT, 1, CrusherJarBlockEntity.SLOT_COUNT, 36);
     }

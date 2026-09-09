@@ -85,7 +85,7 @@ public class CrusherJarMenu extends AbstractContainerMenu {
         throw new IllegalStateException("No crusher jar at " + pos);
     }
 
-    /** Client-side: the NBT of the captured spirit, for drawing the portrait. */
+    // client-side, for the portrait
     public CompoundTag getContainedTag() {
         return this.jar.getContainedTag();
     }

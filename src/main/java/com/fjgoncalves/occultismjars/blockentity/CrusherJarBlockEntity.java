@@ -3,8 +3,6 @@ package com.fjgoncalves.occultismjars.blockentity;
 import com.fjgoncalves.occultismjars.ModComponents;
 import com.fjgoncalves.occultismjars.OccultismJars;
 
-import org.jetbrains.annotations.Nullable;
-
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentMap;
@@ -12,8 +10,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -21,10 +17,6 @@ import net.minecraft.world.level.block.state.BlockState;
 public class CrusherJarBlockEntity extends BlockEntity {
 
     private CompoundTag contained;
-
-    /** Client-only: cached entity used to render a mini spirit inside the jar. */
-    private Entity displayEntity;
-    private boolean displayDirty = true;
 
     public CrusherJarBlockEntity(BlockPos pos, BlockState state) {
         super(OccultismJars.CRUSHER_JAR_BE.get(), pos, state);
@@ -51,42 +43,16 @@ public class CrusherJarBlockEntity extends BlockEntity {
     }
 
     private void onContentsChanged() {
-        this.displayDirty = true;
         this.setChanged();
         if (this.level != null) {
             this.level.sendBlockUpdated(this.worldPosition, this.getBlockState(), this.getBlockState(), Block.UPDATE_ALL);
         }
     }
 
-    @Nullable
-    public Entity getDisplayEntity() {
-        if (this.level == null || !this.level.isClientSide) {
-            return null;
-        }
-        if (this.contained == null) {
-            this.displayEntity = null;
-            return null;
-        }
-        if (this.displayEntity == null || this.displayDirty) {
-            this.displayDirty = false;
-            try {
-                this.displayEntity = EntityType.create(this.contained.getCompound("data"), this.level).orElse(null);
-            } catch (Exception e) {
-                this.displayEntity = null;
-            }
-            if (this.displayEntity != null) {
-                this.displayEntity.setNoGravity(true);
-                this.displayEntity.setPos(this.worldPosition.getX() + 0.5, this.worldPosition.getY(), this.worldPosition.getZ() + 0.5);
-            }
-        }
-        return this.displayEntity;
-    }
-
     @Override
     protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.loadAdditional(tag, registries);
         this.contained = tag.contains("contained") ? tag.getCompound("contained") : null;
-        this.displayDirty = true;
     }
 
     @Override

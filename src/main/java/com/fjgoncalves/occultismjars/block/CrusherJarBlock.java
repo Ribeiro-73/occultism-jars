@@ -22,7 +22,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class CrusherJarBlock extends Block implements EntityBlock {
 
-    private static final VoxelShape SHAPE = Block.box(4, 0, 4, 11, 11, 11);
+    private static final VoxelShape SHAPE = Block.box(4, 0, 4, 13, 16, 13);
 
     public CrusherJarBlock(BlockBehaviour.Properties properties) {
         super(properties);

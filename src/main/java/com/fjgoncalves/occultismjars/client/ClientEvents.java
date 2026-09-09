@@ -6,6 +6,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.ModelEvent;
 
 @EventBusSubscriber(modid = OccultismJars.MODID, value = Dist.CLIENT)
 public final class ClientEvents {
@@ -13,5 +14,10 @@ public final class ClientEvents {
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(OccultismJars.CRUSHER_JAR_BE.get(), CrusherJarRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void registerModels(ModelEvent.RegisterAdditional event) {
+        event.register(CrusherJarRenderer.SPIRIT_MODEL);
     }
 }

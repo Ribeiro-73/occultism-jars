@@ -8,6 +8,9 @@ A glass jar traps a single Crusher spirit and runs its crushing automatically, s
 the ore processing stays inside one block instead of a spirit wandering around and
 scattering dropped items.
 
+Full documentation — setup, automation, config, tuning and an FAQ — is on the
+**[wiki](https://github.com/Ribeiro-73/occultism-jars/wiki)**.
+
 ## What it does
 
 - **Catch a crusher.** Right-click a ritual-summoned Crusher spirit
@@ -47,7 +50,9 @@ JEI is optional (only the JEI hook uses it).
 ```
 
 Occultism and its dependencies need to be in `run/client/mods/` for `runClient` to
-load the addon.
+load the addon. More detail, including the stored-spirit data component, is on the
+[For Developers](https://github.com/Ribeiro-73/occultism-jars/wiki/For-Developers)
+wiki page.
 
 ## License
 

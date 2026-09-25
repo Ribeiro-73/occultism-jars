@@ -26,8 +26,8 @@ public class HolographicBaseRenderer implements BlockEntityRenderer<HolographicB
     private static final float MARGIN = 1.0F / 16.0F;
     private static final float MAX_WIDTH = 12.0F / 16.0F;
 
-    // ARGB: alpha 0xB0 = slightly see-through
-    private static final int HOLOGRAM_COLOR = 0xB0A259FF;
+    // ARGB: alpha 0x88 = about half see-through
+    private static final int HOLOGRAM_COLOR = 0x88A259FF;
 
     // where the gem sits, relative to the base's front (the side facing whoever placed it)
     private static final float GEM_HEIGHT = 4.0F / 16.0F;

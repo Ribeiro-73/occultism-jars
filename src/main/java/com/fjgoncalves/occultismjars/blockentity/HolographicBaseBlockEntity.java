@@ -118,7 +118,7 @@ public class HolographicBaseBlockEntity extends SpiritWorkerBlockEntity {
     @Override
     public Component getDisplayName() {
         return this.spiritData != null && this.job != null
-                ? this.job.describe(this.spiritData.getString("id"))
+                ? this.job.describe(this.spiritData.getString("id"), SpiritJob.factoryIdOf(this.spiritData))
                 : this.getBlockName();
     }
 

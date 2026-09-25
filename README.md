@@ -4,7 +4,7 @@
 
 An [Occultism](https://modrinth.com/mod/occultism) addon for NeoForge 1.21.1.
 
-Working spirits (crushers, smelters and crystallizers) do their job inside a
+Working spirits (crushers, smelters, crystallizers and traders) do their job inside a
 block instead of wandering around and scattering dropped items.
 
 Full documentation — setup, automation, config, tuning and an FAQ — is on the
@@ -21,7 +21,9 @@ Full documentation — setup, automation, config, tuning and an FAQ — is on th
   takes the gem back.
 - **Jobs.** Crushers use `occultism:crushing`, crystallizers use
   `occultism:crystallize`, smelters use furnace, blast furnace, smoker and campfire
-  recipes. Only items the spirit can actually process go in.
+  recipes, traders (Otherstone, Otherrock, sapling and the Gambler) use
+  `occultism:spirit_trade` and only work on the base. Only items the spirit can
+  actually process go in.
 - **Same numbers as the real spirits.** Speed, output multiplier and operation
   count are read live from Occultism's own `occultism-server.toml`
   (`[spirit_job]`), so tuning the config affects both blocks too.

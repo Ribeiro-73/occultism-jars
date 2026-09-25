@@ -7,6 +7,7 @@ import com.fjgoncalves.occultismjars.blockentity.SpiritWorkerBlockEntity;
 import com.fjgoncalves.occultismjars.menu.SpiritWorkerMenu;
 import com.klikli_dev.occultism.crafting.recipe.CrushingRecipe;
 import com.klikli_dev.occultism.crafting.recipe.CrystallizeRecipe;
+import com.klikli_dev.occultism.crafting.recipe.SpiritTradeRecipe;
 
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
@@ -27,14 +28,17 @@ public class JeiCompat implements IModPlugin {
             RecipeType.createRecipeHolderType(ResourceLocation.fromNamespaceAndPath("occultism", "crushing"));
     private static final RecipeType<RecipeHolder<CrystallizeRecipe>> OCCULTISM_CRYSTALLIZE =
             RecipeType.createRecipeHolderType(ResourceLocation.fromNamespaceAndPath("occultism", "crystallize"));
+    private static final RecipeType<RecipeHolder<SpiritTradeRecipe>> OCCULTISM_SPIRIT_TRADE =
+            RecipeType.createRecipeHolderType(ResourceLocation.fromNamespaceAndPath("occultism", "spirit_trade"));
 
     // shown as catalysts; the cooking ones are left out so the blocks don't read as furnaces
     private static final List<RecipeType<?>> CATALYST_JOBS = List.of(OCCULTISM_CRUSHING, OCCULTISM_CRYSTALLIZE);
 
-    // everything a crusher, smelter or crystallizer spirit can do, for the + button
+    // everything a working spirit can do, for the + button
     private static final List<RecipeType<?>> SPIRIT_JOBS = List.of(
             OCCULTISM_CRUSHING,
             OCCULTISM_CRYSTALLIZE,
+            OCCULTISM_SPIRIT_TRADE,
             RecipeTypes.SMELTING,
             RecipeTypes.BLASTING,
             RecipeTypes.SMOKING,
@@ -51,6 +55,8 @@ public class JeiCompat implements IModPlugin {
             registration.addRecipeCatalyst(new ItemStack(OccultismJars.SPIRIT_JAR_ITEM.get()), type);
             registration.addRecipeCatalyst(new ItemStack(OccultismJars.HOLOGRAPHIC_BASE_ITEM.get()), type);
         }
+        // traders have no tiers, so only the base can run them
+        registration.addRecipeCatalyst(new ItemStack(OccultismJars.HOLOGRAPHIC_BASE_ITEM.get()), OCCULTISM_SPIRIT_TRADE);
     }
 
     @Override

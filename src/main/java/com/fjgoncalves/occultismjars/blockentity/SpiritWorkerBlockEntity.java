@@ -1,5 +1,7 @@
 package com.fjgoncalves.occultismjars.blockentity;
 
+import java.util.List;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.fjgoncalves.occultismjars.Config;
@@ -9,6 +11,8 @@ import com.klikli_dev.occultism.Occultism;
 import com.klikli_dev.occultism.crafting.recipe.CrushingRecipe;
 import com.klikli_dev.occultism.crafting.recipe.CrystallizeRecipe;
 import com.klikli_dev.occultism.crafting.recipe.TieredSingleRecipeInput;
+import com.klikli_dev.occultism.crafting.recipe.TraderRecipeInput;
+import com.klikli_dev.occultism.crafting.recipe.result.WeightedRecipeResult;
 import com.klikli_dev.occultism.registry.OccultismRecipes;
 import com.klikli_dev.occultism.registry.OccultismSounds;
 
@@ -23,6 +27,8 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.util.RandomSource;
+import net.minecraft.util.random.WeightedRandom;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -95,7 +101,7 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
 
     // last recipe lookup, see recipeFor
     private ItemStack cachedInput = ItemStack.EMPTY;
-    private RecipeHolder<?> cachedRecipe;
+    private Object cachedRecipe;
     private int cachedTier;
     private int cachedVersion = -1;
 
@@ -179,7 +185,7 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
         if (data == null || job == null) {
             return name;
         }
-        return Component.translatable("container.occultismjars.spirit_worker", name, job.describe(data.getString("id")));
+        return Component.translatable("container.occultismjars.spirit_worker", name, job.describe(data.getString("id"), SpiritJob.factoryIdOf(data)));
     }
 
     @Nullable
@@ -199,20 +205,35 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
         worker.maxProgress = work.time();
         worker.progress++;
         if (worker.progress % 40 == 0) {
-            playWorkSound(level, pos, worker.getJob());
+            playWorkSound(level, pos, worker.getJob(), false);
         }
 
         if (worker.progress >= work.time()) {
+            ItemStack produced = work.produce(level.getRandom());
+            // a gambler can roll something that doesn't fit; hold at full until there's room
+            if (!worker.canFitInOutput(produced)) {
+                worker.progress = work.time();
+                return;
+            }
             worker.progress = 0;
             worker.inventory.extractItem(INPUT_SLOT, work.consumed(), false);
-            worker.pushToOutput(work.result());
+            worker.pushToOutput(produced);
             worker.setChanged();
-            playWorkSound(level, pos, worker.getJob());
+            playWorkSound(level, pos, worker.getJob(), true);
         }
     }
 
-    // one operation: what comes out, how many ticks it takes, how many inputs it eats
-    private record Work(ItemStack result, int time, int consumed) {
+    // one operation: what comes out, how many ticks it takes, how many inputs it eats;
+    // traders roll their result from a weighted list when the operation finishes
+    private record Work(ItemStack result, int time, int consumed, @Nullable List<WeightedRecipeResult> rolls) {
+        ItemStack produce(RandomSource random) {
+            if (this.rolls == null) {
+                return this.result.copy();
+            }
+            return WeightedRandom.getRandomItem(random, this.rolls)
+                    .map(roll -> roll.getStack().copyWithCount(roll.getStack().getCount() * this.consumed))
+                    .orElse(ItemStack.EMPTY);
+        }
     }
 
     // same numbers as the spirit doing the job in the world, read live from occultism-server.toml
@@ -230,8 +251,8 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
         switch (job) {
             case CRUSHER -> {
                 var settings = pick(tier, jobs.crusherFoliot, jobs.crusherDjinni, jobs.crusherAfrit, jobs.crusherMarid);
-                RecipeHolder<?> holder = this.recipeFor(job, input, settings.tier.get());
-                if (holder == null || !(holder.value() instanceof CrushingRecipe recipe)) {
+                if (!(this.recipeFor(job, input, settings.tier.get()) instanceof RecipeHolder<?> holder)
+                        || !(holder.value() instanceof CrushingRecipe recipe)) {
                     return null;
                 }
                 float output = recipe.getIgnoreCrushingMultiplier() ? 1.0F : settings.outputMultiplier.get().floatValue();
@@ -240,8 +261,8 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
             }
             case CRYSTALLIZER -> {
                 var settings = pick(tier, jobs.crystallizerFoliot, jobs.crystallizerDjinni, jobs.crystallizerAfrit, jobs.crystallizerMarid);
-                RecipeHolder<?> holder = this.recipeFor(job, input, settings.tier.get());
-                if (holder == null || !(holder.value() instanceof CrystallizeRecipe recipe)) {
+                if (!(this.recipeFor(job, input, settings.tier.get()) instanceof RecipeHolder<?> holder)
+                        || !(holder.value() instanceof CrystallizeRecipe recipe)) {
                     return null;
                 }
                 float output = recipe.getIgnoreCrystallizeMultiplier() ? 1.0F : settings.outputMultiplier.get().floatValue();
@@ -250,22 +271,44 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
             }
             case SMELTER -> {
                 var settings = pick(tier, jobs.smelterFoliot, jobs.smelterDjinni, jobs.smelterAfrit, jobs.smelterMarid);
-                RecipeHolder<?> holder = this.recipeFor(job, input, 0);
-                if (holder == null || !(holder.value() instanceof AbstractCookingRecipe recipe)) {
+                if (!(this.recipeFor(job, input, 0) instanceof RecipeHolder<?> holder)
+                        || !(holder.value() instanceof AbstractCookingRecipe recipe)) {
                     return null;
                 }
                 return work(recipe.getResultItem(registries), input, settings.operationCount.get(), 1.0F,
                         recipe.getCookingTime() * settings.timeMultiplier.get().floatValue() * jarTime);
             }
+            case TRADER -> {
+                var settings = switch (this.getFactoryId()) {
+                    case "occultism:trader_otherrock" -> jobs.traderOtherrock;
+                    case "occultism:trader_otherworld_saplings" -> jobs.traderSapling;
+                    case "occultism:gambler" -> jobs.traderGem;
+                    default -> jobs.traderOtherstone;
+                };
+                if (!(this.recipeFor(job, input, 0) instanceof List<?> found) || found.isEmpty()) {
+                    return null;
+                }
+                @SuppressWarnings("unchecked")
+                List<WeightedRecipeResult> rolls = (List<WeightedRecipeResult>) found;
+                int operations = Math.min(settings.operationCount.get(), input.getCount());
+                ItemStack preview = rolls.get(0).getStack();
+                return new Work(preview.copyWithCount(preview.getCount() * operations),
+                        Math.max(1, Mth.ceil(settings.operationTimer.get() * jarTime)), operations, rolls);
+            }
         }
         return null;
+    }
+
+    private String getFactoryId() {
+        CompoundTag data = this.getSpiritData();
+        return data == null ? "" : SpiritJob.factoryIdOf(data);
     }
 
     private static Work work(ItemStack recipeResult, ItemStack input, int operationCount, float outputMultiplier, float time) {
         int operations = Math.min(operationCount, input.getCount());
         ItemStack result = recipeResult.copy();
         result.setCount(Mth.floor(result.getCount() * operations * outputMultiplier));
-        return new Work(result, Math.max(1, Mth.ceil(time)), operations);
+        return new Work(result, Math.max(1, Mth.ceil(time)), operations, null);
     }
 
     private static <T> T pick(int tier, T foliot, T djinni, T afrit, T marid) {
@@ -277,14 +320,15 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
         };
     }
 
-    // the last lookup is remembered, so a stack of the same item doesn't search the recipes every tick
+    // the last lookup is remembered, so a stack of the same item doesn't search the recipes every tick;
+    // a RecipeHolder, or for traders the list of weighted results
     @Nullable
-    private RecipeHolder<?> recipeFor(SpiritJob job, ItemStack input, int recipeTier) {
+    private Object recipeFor(SpiritJob job, ItemStack input, int recipeTier) {
         if (this.cachedVersion == this.spiritVersion && this.cachedTier == recipeTier
                 && ItemStack.isSameItemSameComponents(this.cachedInput, input)) {
             return this.cachedRecipe;
         }
-        RecipeHolder<?> found = this.lookupRecipe(job, input, recipeTier);
+        Object found = this.lookupRecipe(job, input, recipeTier);
         this.cachedVersion = this.spiritVersion;
         this.cachedTier = recipeTier;
         this.cachedInput = input.copyWithCount(1);
@@ -293,9 +337,14 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
     }
 
     @Nullable
-    private RecipeHolder<?> lookupRecipe(SpiritJob job, ItemStack input, int recipeTier) {
+    private Object lookupRecipe(SpiritJob job, ItemStack input, int recipeTier) {
         RecipeManager recipes = this.level.getRecipeManager();
         return switch (job) {
+            // every trade this trader has for the item, like the spirit does
+            case TRADER -> recipes.getRecipesFor(OccultismRecipes.SPIRIT_TRADE_TYPE.get(),
+                            new TraderRecipeInput(input, this.getFactoryId()), this.level).stream()
+                    .map(holder -> holder.value().getWeightedResult())
+                    .toList();
             case CRUSHER -> recipes.getRecipeFor(OccultismRecipes.CRUSHING_TYPE.get(),
                     new TieredSingleRecipeInput(input, recipeTier), this.level).orElse(null);
             case CRYSTALLIZER -> recipes.getRecipeFor(OccultismRecipes.CRYSTALLIZE_TYPE.get(),
@@ -318,14 +367,16 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
         };
     }
 
-    private static void playWorkSound(Level level, BlockPos pos, @Nullable SpiritJob job) {
-        if (job == null || !Config.PLAY_CRUSHING_SOUND.get()) {
+    private static void playWorkSound(Level level, BlockPos pos, @Nullable SpiritJob job, boolean finished) {
+        // the trader's ritual chime is only for a finished trade, repeating it would get old fast
+        if (job == null || !Config.PLAY_CRUSHING_SOUND.get() || (job == SpiritJob.TRADER && !finished)) {
             return;
         }
         SoundEvent sound = switch (job) {
             case CRUSHER -> OccultismSounds.CRUNCHING.get();
             case SMELTER -> SoundEvents.FIRE_AMBIENT;
             case CRYSTALLIZER -> SoundEvents.AMETHYST_CLUSTER_STEP;
+            case TRADER -> OccultismSounds.START_RITUAL.get();
         };
         level.playSound(null, pos, sound, SoundSource.BLOCKS, 1.0F, 1.0F + 0.5F * level.random.nextFloat());
     }

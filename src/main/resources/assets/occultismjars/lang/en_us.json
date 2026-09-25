@@ -10,6 +10,7 @@
   "tooltip.occultismjars.spirit_jar.capture": "Right-click a working Foliot or Djinni with an empty jar to trap it",
   "tooltip.occultismjars.spirit_jar.release": "Place the jar and shift + right-click it with an empty hand to release the spirit",
   "message.occultismjars.too_strong": "This spirit is too powerful for a jar",
+  "message.occultismjars.base_only": "This spirit only works on a Holographic Base",
   "item.occultismjars.ritual_dummy.craft_spirit_jar": "Ritual: Craft Spirit Jar",
   "item.occultismjars.ritual_dummy.craft_spirit_jar.tooltip": "A glass jar that can hold a working Foliot or Djinni.",
   "ritual.occultismjars.craft_spirit_jar.started": "Starting the ritual: Craft Spirit Jar.",

@@ -10,6 +10,7 @@
   "tooltip.occultismjars.spirit_jar.capture": "Clique com o botão direito num Foliot ou Djinni trabalhador com o jarro vazio pra prender ele",
   "tooltip.occultismjars.spirit_jar.release": "Coloque o jarro e clique com o botão direito agachado, de mão vazia, pra soltar o espírito",
   "message.occultismjars.too_strong": "Esse espírito é forte demais pra um jarro",
+  "message.occultismjars.base_only": "Esse espírito só trabalha na Base Holográfica",
   "item.occultismjars.ritual_dummy.craft_spirit_jar": "Ritual: Criar Jarro Espiritual",
   "item.occultismjars.ritual_dummy.craft_spirit_jar.tooltip": "Um jarro de vidro que prende um Foliot ou Djinni trabalhador.",
   "ritual.occultismjars.craft_spirit_jar.started": "Iniciando o ritual: Criar Jarro Espiritual.",

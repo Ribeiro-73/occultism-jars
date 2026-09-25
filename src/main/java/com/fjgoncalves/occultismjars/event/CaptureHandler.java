@@ -71,7 +71,8 @@ public final class CaptureHandler {
             return false;
         }
         if (tier > job.jarMaxTier()) {
-            player.displayClientMessage(Component.translatable("message.occultismjars.too_strong"), true);
+            String message = job.jarMaxTier() == 0 ? "message.occultismjars.base_only" : "message.occultismjars.too_strong";
+            player.displayClientMessage(Component.translatable(message), true);
             return true;
         }
 

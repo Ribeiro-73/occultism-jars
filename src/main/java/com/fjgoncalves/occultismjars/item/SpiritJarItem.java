@@ -30,7 +30,7 @@ public class SpiritJarItem extends BlockItem {
             if (job == null) {
                 job = SpiritJob.CRUSHER;
             }
-            tooltip.add(Component.translatable("tooltip.occultismjars.contains", job.describe(stored.getString("entity")))
+            tooltip.add(Component.translatable("tooltip.occultismjars.contains", job.describe(stored.getString("entity"), SpiritJob.factoryIdOf(stored.getCompound("data"))))
                     .withStyle(ChatFormatting.GRAY));
         }
         tooltip.add(Component.translatable("tooltip.occultismjars.spirit_jar.capture").withStyle(ChatFormatting.DARK_GRAY));

@@ -41,7 +41,7 @@ public class SpiritWorkerMenu extends AbstractContainerMenu {
         this.addSlot(new SlotItemHandler(inv, SpiritWorkerBlockEntity.INPUT_SLOT, 134, 26) {
             @Override
             public boolean mayPlace(ItemStack stack) {
-                return worker.canCrush(stack);
+                return worker.canProcess(stack);
             }
         });
         this.addSlot(new SlotItemHandler(inv, SpiritWorkerBlockEntity.FIRST_OUTPUT_SLOT, 134, 54) {

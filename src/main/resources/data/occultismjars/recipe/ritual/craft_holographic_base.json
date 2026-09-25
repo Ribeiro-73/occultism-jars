@@ -6,22 +6,37 @@
   "duration": 240,
   "ingredients": [
     {
-      "tag": "c:storage_blocks/emerald"
+      "type": "neoforge:components",
+      "items": "occultism:soul_gem",
+      "components": {},
+      "strict": true
     },
     {
-      "tag": "c:storage_blocks/diamond"
+      "type": "neoforge:components",
+      "items": "minecraft:potion",
+      "components": {
+        "minecraft:potion_contents": {
+          "potion": "minecraft:water"
+        }
+      }
     },
     {
-      "tag": "c:storage_blocks/gold"
+      "tag": "c:storage_blocks/iesnium"
     },
     {
-      "tag": "c:storage_blocks/iron"
+      "item": "minecraft:furnace"
     },
     {
-      "tag": "c:storage_blocks/netherite"
+      "tag": "c:storage_blocks/raw_iron"
     },
     {
-      "tag": "c:storage_blocks/coal"
+      "item": "occultism:silver_sacrificial_bowl"
+    },
+    {
+      "item": "occultism:spirit_attuned_crystal"
+    },
+    {
+      "item": "minecraft:amethyst_cluster"
     }
   ],
   "pentacle_id": "occultism:summon_marid",

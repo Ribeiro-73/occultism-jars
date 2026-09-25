@@ -18,6 +18,11 @@ public final class Config {
             .comment("Extra multiplier on a jar's crushing time, on top of Occultism's per-tier setting. Lower is faster.")
             .defineInRange("jarTimeMultiplier", 1.0D, 0.05D, 20.0D);
 
+    public static final ModConfigSpec.IntValue POTION_REFRESH_SECONDS = BUILDER
+            .comment("A demonic partner on a holographic base only uses the next potion once the owner's effect",
+                    "has less than this many seconds left.")
+            .defineInRange("potionRefreshSeconds", 30, 1, 3600);
+
     public static final ModConfigSpec SPEC = BUILDER.build();
 
     private Config() {

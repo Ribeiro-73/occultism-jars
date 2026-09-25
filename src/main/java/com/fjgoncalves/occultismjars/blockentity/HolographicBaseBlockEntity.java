@@ -1,5 +1,7 @@
 package com.fjgoncalves.occultismjars.blockentity;
 
+import java.util.function.Consumer;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.fjgoncalves.occultismjars.OccultismJars;
@@ -10,11 +12,14 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.items.ItemStackHandler;
 
 public class HolographicBaseBlockEntity extends SpiritWorkerBlockEntity {
 
@@ -42,12 +47,12 @@ public class HolographicBaseBlockEntity extends SpiritWorkerBlockEntity {
         if (data == null) {
             return false;
         }
-        String factoryId = data.copyTag().getCompound("spiritJob").getString("factoryId");
-        SpiritJob job = SpiritJob.byFactoryId(factoryId);
+        CompoundTag tag = data.copyTag();
+        SpiritJob job = SpiritJob.of(tag);
         if (job == null) {
             return false;
         }
-        int tier = job.tierOf(factoryId);
+        int tier = job.tierOf(tag);
         return tier >= 1 && tier <= job.maxTier();
     }
 
@@ -59,18 +64,76 @@ public class HolographicBaseBlockEntity extends SpiritWorkerBlockEntity {
         return !this.gem.isEmpty();
     }
 
+    // a spirit caught mid-job keeps the item in its hand: that becomes the base's input
     public void insertGem(ItemStack stack) {
         this.gem = stack.copyWithCount(1);
         this.readSpirit();
+        if (this.holdsWork() && this.inventory.getStackInSlot(INPUT_SLOT).isEmpty()) {
+            ItemStack held = this.heldItem();
+            if (!held.isEmpty()) {
+                this.setHeldItem(ItemStack.EMPTY);
+                this.inventory.setStackInSlot(INPUT_SLOT, held);
+            }
+        }
         this.onSpiritChanged();
     }
 
+    // the input goes back into the spirit's hand, so it carries on with it once released;
+    // whatever it can't hold stays in the input slot for the caller to hand back
     public ItemStack removeGem() {
+        this.returnInputToSpirit();
         ItemStack taken = this.gem;
         this.gem = ItemStack.EMPTY;
         this.readSpirit();
         this.onSpiritChanged();
         return taken;
+    }
+
+    private void returnInputToSpirit() {
+        ItemStack input = this.inventory.getStackInSlot(INPUT_SLOT);
+        if (!input.isEmpty() && this.holdsWork() && this.heldItem().isEmpty()) {
+            this.setHeldItem(input.copy());
+            this.inventory.setStackInSlot(INPUT_SLOT, ItemStack.EMPTY);
+        }
+    }
+
+    // working spirits keep what they're processing in their main hand; partners don't work that way
+    private boolean holdsWork() {
+        return this.level != null && this.job != null && this.job != SpiritJob.PARTNER;
+    }
+
+    // an Occultism spirit's main hand is slot 0 of its own "inventory", not the vanilla HandItems;
+    // HandItems is still read as a fallback so anything left there by older builds isn't lost
+    private ItemStack heldItem() {
+        HolderLookup.Provider registries = this.level.registryAccess();
+        ItemStack held = spiritInventory(this.spiritData, registries).getStackInSlot(0);
+        if (held.isEmpty()) {
+            ListTag hands = this.spiritData.getList("HandItems", Tag.TAG_COMPOUND);
+            held = hands.isEmpty() ? ItemStack.EMPTY : ItemStack.parseOptional(registries, hands.getCompound(0));
+        }
+        return held;
+    }
+
+    private void setHeldItem(ItemStack stack) {
+        HolderLookup.Provider registries = this.level.registryAccess();
+        this.updateSpiritData(tag -> {
+            ItemStackHandler inventory = spiritInventory(tag, registries);
+            inventory.setStackInSlot(0, stack);
+            tag.put("inventory", inventory.serializeNBT(registries));
+            ListTag hands = tag.getList("HandItems", Tag.TAG_COMPOUND);
+            if (!hands.isEmpty()) {
+                hands.set(0, new CompoundTag());
+                tag.put("HandItems", hands);
+            }
+        });
+    }
+
+    private static ItemStackHandler spiritInventory(CompoundTag spirit, HolderLookup.Provider registries) {
+        ItemStackHandler inventory = new ItemStackHandler(1);
+        if (spirit.contains("inventory")) {
+            inventory.deserializeNBT(registries, spirit.getCompound("inventory"));
+        }
+        return inventory;
     }
 
     private void readSpirit() {
@@ -82,14 +145,24 @@ public class HolographicBaseBlockEntity extends SpiritWorkerBlockEntity {
             return;
         }
         CompoundTag tag = data.copyTag();
-        String factoryId = tag.getCompound("spiritJob").getString("factoryId");
-        SpiritJob found = SpiritJob.byFactoryId(factoryId);
+        SpiritJob found = SpiritJob.of(tag);
         if (found == null) {
             return;
         }
         this.spiritData = tag;
         this.job = found;
-        this.tier = found.tierOf(factoryId);
+        this.tier = found.tierOf(tag);
+    }
+
+    // the partner's heart cooldown lives in its own data, so it follows the gem around
+    @Override
+    protected void updateSpiritData(Consumer<CompoundTag> edit) {
+        if (this.gem.isEmpty()) {
+            return;
+        }
+        CustomData.update(DataComponents.ENTITY_DATA, this.gem, edit);
+        this.readSpirit();
+        this.setChanged();
     }
 
     @Nullable
@@ -123,6 +196,7 @@ public class HolographicBaseBlockEntity extends SpiritWorkerBlockEntity {
     }
 
     public void dropContents() {
+        this.returnInputToSpirit();
         this.dropInventory();
         if (this.level != null && !this.gem.isEmpty()) {
             Block.popResource(this.level, this.worldPosition, this.gem);

@@ -2,6 +2,8 @@ package com.fjgoncalves.occultismjars.content;
 
 import java.util.List;
 
+import org.jetbrains.annotations.Nullable;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 
@@ -10,26 +12,31 @@ public enum SpiritJob {
     SMELTER("smelter", "occultism:smelt_tier", 4),
     CRYSTALLIZER("crystallizer", "occultism:crystal_tier", 4),
     TRADER("trader", List.of("occultism:trader_otherstone", "occultism:trader_otherrock",
-            "occultism:trader_otherworld_saplings", "occultism:gambler"));
+            "occultism:trader_otherworld_saplings", "occultism:gambler"), List.of()),
+    // no job in their data at all, they're recognised by what they are
+    PARTNER("partner", List.of(), List.of("occultism:demonic_wife", "occultism:demonic_husband"));
 
     private final String name;
     // tiered jobs: "occultism:crush_tier" + n
     private final String factoryPrefix;
-    // untiered jobs: the exact factory ids
+    // untiered jobs: the exact factory ids, or the entity ids for spirits without one
     private final List<String> factoryIds;
+    private final List<String> entityIds;
     private final int maxTier;
 
     SpiritJob(String name, String factoryPrefix, int maxTier) {
         this.name = name;
         this.factoryPrefix = factoryPrefix;
         this.factoryIds = List.of();
+        this.entityIds = List.of();
         this.maxTier = maxTier;
     }
 
-    SpiritJob(String name, List<String> factoryIds) {
+    SpiritJob(String name, List<String> factoryIds, List<String> entityIds) {
         this.name = name;
         this.factoryPrefix = null;
         this.factoryIds = factoryIds;
+        this.entityIds = entityIds;
         this.maxTier = 1;
     }
 
@@ -46,9 +53,12 @@ public enum SpiritJob {
         return this.maxTier / 2;
     }
 
-    // "Foliot Crusher", "Foliot Otherstone Trader"...
+    // "Foliot Crusher", "Foliot Otherstone Trader", "Demonic Wife"...
     public Component describe(String entityId, String factoryId) {
         Component spirit = Component.translatable("entity." + entityId.replace(':', '.'));
+        if (!this.entityIds.isEmpty()) {
+            return spirit;
+        }
         // traders already have their own names in Occultism
         Component job = this.factoryPrefix == null && !factoryId.isEmpty()
                 ? Component.translatable("job." + factoryId.replace(':', '.'))
@@ -71,9 +81,28 @@ public enum SpiritJob {
     }
 
     public static SpiritJob byFactoryId(String factoryId) {
+        if (factoryId.isEmpty()) {
+            return null;
+        }
         for (SpiritJob job : values()) {
             if (job.factoryPrefix != null ? factoryId.startsWith(job.factoryPrefix) : job.factoryIds.contains(factoryId)) {
                 return job;
+            }
+        }
+        return null;
+    }
+
+    // from a whole saved entity: its job id first, then what the entity is
+    @Nullable
+    public static SpiritJob of(CompoundTag entityData) {
+        SpiritJob job = byFactoryId(factoryIdOf(entityData));
+        if (job != null) {
+            return job;
+        }
+        String entityId = entityData.getString("id");
+        for (SpiritJob candidate : values()) {
+            if (candidate.entityIds.contains(entityId)) {
+                return candidate;
             }
         }
         return null;
@@ -89,5 +118,12 @@ public enum SpiritJob {
         } catch (NumberFormatException | IndexOutOfBoundsException e) {
             return 0;
         }
+    }
+
+    public int tierOf(CompoundTag entityData) {
+        if (!this.entityIds.isEmpty()) {
+            return this.entityIds.contains(entityData.getString("id")) ? 1 : 0;
+        }
+        return this.tierOf(factoryIdOf(entityData));
     }
 }

@@ -22,7 +22,11 @@ Full documentation — setup, automation, config, tuning and an FAQ — is on th
 - **Jobs.** Crushers use `occultism:crushing`, crystallizers use
   `occultism:crystallize`, smelters use furnace, blast furnace, smoker and campfire
   recipes, traders (Otherstone, Otherrock, sapling and the Gambler) use
-  `occultism:spirit_trade` and only work on the base. Only items the spirit can
+  `occultism:spirit_trade` and only work on the base. A Demonic Wife or Husband on
+  the base gives its owner (anywhere on the server) potion and suspicious stew
+  effects that last much longer, waiting until they are about to run out before
+  using the next one; it also cooks raw food and turns Cursed Honey into a Sweet
+  Honey Heart. Harmful and instant effects are ignored. Only items the spirit can
   actually process go in.
 - **Same numbers as the real spirits.** Speed, output multiplier and operation
   count are read live from Occultism's own `occultism-server.toml`

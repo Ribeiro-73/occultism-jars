@@ -165,6 +165,11 @@ public class HolographicBaseBlock extends Block implements EntityBlock {
             }
             if (!level.isClientSide) {
                 player.setItemInHand(InteractionHand.MAIN_HAND, base.removeGem());
+                // what the spirit couldn't take along (a partner's potions, say) goes back to the player
+                ItemStack leftover = base.takeInput();
+                if (!leftover.isEmpty()) {
+                    player.getInventory().placeItemBackInInventory(leftover);
+                }
                 level.playSound(null, base.getBlockPos(), SoundEvents.ITEM_FRAME_REMOVE_ITEM, SoundSource.BLOCKS, 1.0F, 1.0F);
             }
             return InteractionResult.sidedSuccess(level.isClientSide);

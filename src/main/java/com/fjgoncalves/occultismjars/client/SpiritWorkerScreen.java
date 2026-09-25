@@ -1,7 +1,7 @@
 package com.fjgoncalves.occultismjars.client;
 
 import com.fjgoncalves.occultismjars.Config;
-import com.fjgoncalves.occultismjars.menu.SpiritJarMenu;
+import com.fjgoncalves.occultismjars.menu.SpiritWorkerMenu;
 import com.klikli_dev.occultism.client.gui.spirit.SpiritGui;
 import com.mojang.blaze3d.systems.RenderSystem;
 
@@ -16,7 +16,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 
-public class SpiritJarScreen extends AbstractContainerScreen<SpiritJarMenu> {
+public class SpiritWorkerScreen extends AbstractContainerScreen<SpiritWorkerMenu> {
 
     private static final ResourceLocation TEXTURE =
             ResourceLocation.fromNamespaceAndPath("occultism", "textures/gui/inventory_spirit.png");
@@ -26,7 +26,7 @@ public class SpiritJarScreen extends AbstractContainerScreen<SpiritJarMenu> {
     private LivingEntity portrait;
     private boolean portraitResolved;
 
-    public SpiritJarScreen(SpiritJarMenu menu, Inventory playerInv, Component title) {
+    public SpiritWorkerScreen(SpiritWorkerMenu menu, Inventory playerInv, Component title) {
         super(menu, playerInv, title);
         this.imageWidth = 175;
         this.imageHeight = 165;
@@ -75,10 +75,10 @@ public class SpiritJarScreen extends AbstractContainerScreen<SpiritJarMenu> {
     private LivingEntity portrait() {
         if (!this.portraitResolved) {
             this.portraitResolved = true;
-            CompoundTag tag = this.menu.getContainedTag();
+            CompoundTag tag = this.menu.getSpiritData();
             if (tag != null && Config.RENDER_TRAPPED_SPIRIT.get() && this.minecraft != null && this.minecraft.level != null) {
                 try {
-                    Entity entity = EntityType.create(tag.getCompound("data"), this.minecraft.level).orElse(null);
+                    Entity entity = EntityType.create(tag, this.minecraft.level).orElse(null);
                     if (entity instanceof LivingEntity living) {
                         this.portrait = living;
                     }

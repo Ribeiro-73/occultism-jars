@@ -3,7 +3,7 @@
   "block.occultismjars.spirit_jar": "Jarro Espiritual",
   "tooltip.occultismjars.contains": "Contém: %s",
   "tooltip.occultismjars.spirit_name": "%2$s %1$s",
-  "container.occultismjars.spirit_jar": "%s - %s",
+  "container.occultismjars.spirit_worker": "%s - %s",
   "job.occultismjars.crusher": "Triturador",
   "job.occultismjars.smelter": "Fundidor",
   "job.occultismjars.crystallizer": "Cristalizador",
@@ -15,5 +15,15 @@
   "ritual.occultismjars.craft_spirit_jar.started": "Iniciando o ritual: Criar Jarro Espiritual.",
   "ritual.occultismjars.craft_spirit_jar.finished": "Ritual concluído com sucesso: Criar Jarro Espiritual.",
   "ritual.occultismjars.craft_spirit_jar.interrupted": "Interrupção no ritual: Criar Jarro Espiritual.",
-  "ritual.occultismjars.craft_spirit_jar.conditions": "Nem todos os requisitos deste ritual foram cumpridos."
+  "ritual.occultismjars.craft_spirit_jar.conditions": "Nem todos os requisitos deste ritual foram cumpridos.",
+  "block.occultismjars.holographic_base": "Base Holográfica",
+  "tooltip.occultismjars.holographic_base.insert": "Clique com o botão direito segurando uma Soul Gem ou Trinity Gem com um espírito trabalhador pra colocar ele pra trabalhar",
+  "tooltip.occultismjars.holographic_base.remove": "Clique com o botão direito agachado, de mão vazia, pra pegar a gema de volta",
+  "message.occultismjars.gem_not_accepted": "Essa gema não tem um espírito trabalhador",
+  "item.occultismjars.ritual_dummy.craft_holographic_base": "Ritual: Criar Base Holográfica",
+  "item.occultismjars.ritual_dummy.craft_holographic_base.tooltip": "Uma base que coloca pra trabalhar um espírito preso numa gema, de qualquer tier.",
+  "ritual.occultismjars.craft_holographic_base.started": "Iniciando o ritual: Criar Base Holográfica.",
+  "ritual.occultismjars.craft_holographic_base.finished": "Ritual concluído com sucesso: Criar Base Holográfica.",
+  "ritual.occultismjars.craft_holographic_base.interrupted": "Interrupção no ritual: Criar Base Holográfica.",
+  "ritual.occultismjars.craft_holographic_base.conditions": "Nem todos os requisitos deste ritual foram cumpridos."
 }

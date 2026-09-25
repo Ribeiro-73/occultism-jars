@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.fjgoncalves.occultismjars.ModComponents;
 import com.fjgoncalves.occultismjars.content.SpiritJob;
-import com.fjgoncalves.occultismjars.content.SpiritType;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
@@ -27,28 +26,14 @@ public class SpiritJarItem extends BlockItem {
 
         CompoundTag stored = stack.get(ModComponents.CONTAINED_SPIRIT.get());
         if (stored != null) {
-            tooltip.add(Component.translatable("tooltip.occultismjars.contains", describe(stored))
+            SpiritJob job = SpiritJob.byName(stored.getString("job"));
+            if (job == null) {
+                job = SpiritJob.CRUSHER;
+            }
+            tooltip.add(Component.translatable("tooltip.occultismjars.contains", job.describe(stored.getString("entity")))
                     .withStyle(ChatFormatting.GRAY));
         }
         tooltip.add(Component.translatable("tooltip.occultismjars.spirit_jar.capture").withStyle(ChatFormatting.DARK_GRAY));
         tooltip.add(Component.translatable("tooltip.occultismjars.spirit_jar.release").withStyle(ChatFormatting.DARK_GRAY));
-    }
-
-    // "Foliot Crusher", "Djinni Smelter"...
-    public static Component describe(CompoundTag stored) {
-        String entity = stored.getString("entity");
-        Component spirit;
-        if (entity.isEmpty()) {
-            SpiritType type = SpiritType.byTier(stored.getInt("tier"));
-            spirit = Component.translatable("entity.occultism." + (type != null ? type.spirit() : "foliot"));
-        } else {
-            spirit = Component.translatable("entity." + entity.replace(':', '.'));
-        }
-        SpiritJob job = SpiritJob.byName(stored.getString("job"));
-        if (job == null) {
-            job = SpiritJob.CRUSHER;
-        }
-        return Component.translatable("tooltip.occultismjars.spirit_name", spirit,
-                Component.translatable("job.occultismjars." + job.getName()));
     }
 }

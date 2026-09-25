@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "facing=north,half=lower": { "model": "occultismjars:block/holographic_base" },
+    "facing=east,half=lower": { "model": "occultismjars:block/holographic_base", "y": 90 },
+    "facing=south,half=lower": { "model": "occultismjars:block/holographic_base", "y": 180 },
+    "facing=west,half=lower": { "model": "occultismjars:block/holographic_base", "y": 270 },
+    "facing=north,half=upper": { "model": "occultismjars:block/holographic_base_upper" },
+    "facing=east,half=upper": { "model": "occultismjars:block/holographic_base_upper" },
+    "facing=south,half=upper": { "model": "occultismjars:block/holographic_base_upper" },
+    "facing=west,half=upper": { "model": "occultismjars:block/holographic_base_upper" }
+  }
+}

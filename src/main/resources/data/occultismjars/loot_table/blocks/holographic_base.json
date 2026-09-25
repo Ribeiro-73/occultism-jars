@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "occultismjars:holographic_base"
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:block_state_property",
+          "block": "occultismjars:holographic_base",
+          "properties": { "half": "lower" }
+        },
+        { "condition": "minecraft:survives_explosion" }
+      ]
+    }
+  ]
+}

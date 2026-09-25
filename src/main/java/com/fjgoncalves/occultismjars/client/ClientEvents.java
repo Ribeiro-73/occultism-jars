@@ -14,10 +14,11 @@ public final class ClientEvents {
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(OccultismJars.SPIRIT_JAR_BE.get(), SpiritJarRenderer::new);
+        event.registerBlockEntityRenderer(OccultismJars.HOLOGRAPHIC_BASE_BE.get(), HolographicBaseRenderer::new);
     }
 
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
-        event.register(OccultismJars.SPIRIT_JAR_MENU.get(), SpiritJarScreen::new);
+        event.register(OccultismJars.SPIRIT_WORKER_MENU.get(), SpiritWorkerScreen::new);
     }
 }

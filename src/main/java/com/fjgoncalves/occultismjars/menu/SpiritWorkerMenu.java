@@ -1,7 +1,7 @@
 package com.fjgoncalves.occultismjars.menu;
 
 import com.fjgoncalves.occultismjars.OccultismJars;
-import com.fjgoncalves.occultismjars.blockentity.SpiritJarBlockEntity;
+import com.fjgoncalves.occultismjars.blockentity.SpiritWorkerBlockEntity;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -17,40 +17,40 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
-public class SpiritJarMenu extends AbstractContainerMenu {
+public class SpiritWorkerMenu extends AbstractContainerMenu {
 
-    private final SpiritJarBlockEntity jar;
+    private final SpiritWorkerBlockEntity worker;
     private final BlockPos pos;
     private final ContainerData data;
 
-    public SpiritJarMenu(int id, Inventory playerInv, RegistryFriendlyByteBuf buf) {
+    public SpiritWorkerMenu(int id, Inventory playerInv, RegistryFriendlyByteBuf buf) {
         this(id, playerInv, resolve(playerInv, buf.readBlockPos()), new SimpleContainerData(2));
     }
 
-    public SpiritJarMenu(int id, Inventory playerInv, SpiritJarBlockEntity jar) {
-        this(id, playerInv, jar, jar.getDataAccess());
+    public SpiritWorkerMenu(int id, Inventory playerInv, SpiritWorkerBlockEntity worker) {
+        this(id, playerInv, worker, worker.getDataAccess());
     }
 
-    private SpiritJarMenu(int id, Inventory playerInv, SpiritJarBlockEntity jar, ContainerData data) {
-        super(OccultismJars.SPIRIT_JAR_MENU.get(), id);
-        this.jar = jar;
-        this.pos = jar.getBlockPos();
+    private SpiritWorkerMenu(int id, Inventory playerInv, SpiritWorkerBlockEntity worker, ContainerData data) {
+        super(OccultismJars.SPIRIT_WORKER_MENU.get(), id);
+        this.worker = worker;
+        this.pos = worker.getBlockPos();
         this.data = data;
 
-        IItemHandler inv = jar.getInventory();
-        this.addSlot(new SlotItemHandler(inv, SpiritJarBlockEntity.INPUT_SLOT, 134, 26) {
+        IItemHandler inv = worker.getInventory();
+        this.addSlot(new SlotItemHandler(inv, SpiritWorkerBlockEntity.INPUT_SLOT, 134, 26) {
             @Override
             public boolean mayPlace(ItemStack stack) {
-                return jar.canCrush(stack);
+                return worker.canCrush(stack);
             }
         });
-        this.addSlot(new SlotItemHandler(inv, SpiritJarBlockEntity.FIRST_OUTPUT_SLOT, 134, 54) {
+        this.addSlot(new SlotItemHandler(inv, SpiritWorkerBlockEntity.FIRST_OUTPUT_SLOT, 134, 54) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return false;
             }
         });
-        this.addSlot(new SlotItemHandler(inv, SpiritJarBlockEntity.FIRST_OUTPUT_SLOT + 1, 152, 54) {
+        this.addSlot(new SlotItemHandler(inv, SpiritWorkerBlockEntity.FIRST_OUTPUT_SLOT + 1, 152, 54) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return false;
@@ -77,23 +77,23 @@ public class SpiritJarMenu extends AbstractContainerMenu {
         return this.data.get(1);
     }
 
-    private static SpiritJarBlockEntity resolve(Inventory playerInv, BlockPos pos) {
+    private static SpiritWorkerBlockEntity resolve(Inventory playerInv, BlockPos pos) {
         BlockEntity be = playerInv.player.level().getBlockEntity(pos);
-        if (be instanceof SpiritJarBlockEntity found) {
+        if (be instanceof SpiritWorkerBlockEntity found) {
             return found;
         }
-        throw new IllegalStateException("No spirit jar at " + pos);
+        throw new IllegalStateException("No spirit worker at " + pos);
     }
 
     // client-side, for the portrait
-    public CompoundTag getContainedTag() {
-        return this.jar.getContainedTag();
+    public CompoundTag getSpiritData() {
+        return this.worker.getSpiritData();
     }
 
     @Override
     public boolean stillValid(Player player) {
-        return !this.jar.isRemoved()
-                && player.level().getBlockEntity(this.pos) == this.jar
+        return !this.worker.isRemoved()
+                && player.level().getBlockEntity(this.pos) == this.worker
                 && player.distanceToSqr(this.pos.getX() + 0.5, this.pos.getY() + 0.5, this.pos.getZ() + 0.5) <= 64.0;
     }
 
@@ -107,11 +107,11 @@ public class SpiritJarMenu extends AbstractContainerMenu {
         ItemStack stack = slot.getItem();
         ItemStack original = stack.copy();
 
-        if (index < SpiritJarBlockEntity.SLOT_COUNT) {
-            if (!this.moveItemStackTo(stack, SpiritJarBlockEntity.SLOT_COUNT, this.slots.size(), true)) {
+        if (index < SpiritWorkerBlockEntity.SLOT_COUNT) {
+            if (!this.moveItemStackTo(stack, SpiritWorkerBlockEntity.SLOT_COUNT, this.slots.size(), true)) {
                 return ItemStack.EMPTY;
             }
-        } else if (!this.moveItemStackTo(stack, SpiritJarBlockEntity.INPUT_SLOT, SpiritJarBlockEntity.INPUT_SLOT + 1, false)) {
+        } else if (!this.moveItemStackTo(stack, SpiritWorkerBlockEntity.INPUT_SLOT, SpiritWorkerBlockEntity.INPUT_SLOT + 1, false)) {
             return ItemStack.EMPTY;
         }
 

@@ -1,5 +1,7 @@
 package com.fjgoncalves.occultismjars.content;
 
+import net.minecraft.network.chat.Component;
+
 public enum SpiritJob {
     CRUSHER("crusher", "occultism:crush_tier", 4),
     SMELTER("smelter", "occultism:smelt_tier", 4),
@@ -26,6 +28,13 @@ public enum SpiritJob {
     // jars only hold the lower half of a job's tiers
     public int jarMaxTier() {
         return this.maxTier / 2;
+    }
+
+    // "Foliot Crusher", "Djinni Smelter"...
+    public Component describe(String entityId) {
+        Component spirit = Component.translatable("entity." + entityId.replace(':', '.'));
+        return Component.translatable("tooltip.occultismjars.spirit_name", spirit,
+                Component.translatable("job.occultismjars." + this.name));
     }
 
     public static SpiritJob byName(String name) {

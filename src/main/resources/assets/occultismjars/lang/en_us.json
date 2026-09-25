@@ -3,7 +3,7 @@
   "block.occultismjars.spirit_jar": "Spirit Jar",
   "tooltip.occultismjars.contains": "Contains: %s",
   "tooltip.occultismjars.spirit_name": "%1$s %2$s",
-  "container.occultismjars.spirit_jar": "%s - %s",
+  "container.occultismjars.spirit_worker": "%s - %s",
   "job.occultismjars.crusher": "Crusher",
   "job.occultismjars.smelter": "Smelter",
   "job.occultismjars.crystallizer": "Crystallizer",
@@ -15,5 +15,15 @@
   "ritual.occultismjars.craft_spirit_jar.started": "Starting the ritual: Craft Spirit Jar.",
   "ritual.occultismjars.craft_spirit_jar.finished": "Ritual completed successfully: Craft Spirit Jar.",
   "ritual.occultismjars.craft_spirit_jar.interrupted": "Interruption in the ritual: Craft Spirit Jar.",
-  "ritual.occultismjars.craft_spirit_jar.conditions": "Not all requirements for this ritual are met."
+  "ritual.occultismjars.craft_spirit_jar.conditions": "Not all requirements for this ritual are met.",
+  "block.occultismjars.holographic_base": "Holographic Base",
+  "tooltip.occultismjars.holographic_base.insert": "Right-click it with a Soul Gem or Trinity Gem holding a working spirit to put it to work",
+  "tooltip.occultismjars.holographic_base.remove": "Shift + right-click it with an empty hand to take the gem back",
+  "message.occultismjars.gem_not_accepted": "This gem doesn't hold a working spirit",
+  "item.occultismjars.ritual_dummy.craft_holographic_base": "Ritual: Craft Holographic Base",
+  "item.occultismjars.ritual_dummy.craft_holographic_base.tooltip": "A base that puts a gem-bound spirit of any tier to work.",
+  "ritual.occultismjars.craft_holographic_base.started": "Starting the ritual: Craft Holographic Base.",
+  "ritual.occultismjars.craft_holographic_base.finished": "Ritual completed successfully: Craft Holographic Base.",
+  "ritual.occultismjars.craft_holographic_base.interrupted": "Interruption in the ritual: Craft Holographic Base.",
+  "ritual.occultismjars.craft_holographic_base.conditions": "Not all requirements for this ritual are met."
 }

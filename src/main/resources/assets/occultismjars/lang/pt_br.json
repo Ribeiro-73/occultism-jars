@@ -26,5 +26,15 @@
   "ritual.occultismjars.craft_holographic_base.started": "Iniciando o ritual: Criar Base Holográfica.",
   "ritual.occultismjars.craft_holographic_base.finished": "Ritual concluído com sucesso: Criar Base Holográfica.",
   "ritual.occultismjars.craft_holographic_base.interrupted": "Interrupção no ritual: Criar Base Holográfica.",
-  "ritual.occultismjars.craft_holographic_base.conditions": "Nem todos os requisitos deste ritual foram cumpridos."
+  "ritual.occultismjars.craft_holographic_base.conditions": "Nem todos os requisitos deste ritual foram cumpridos.",
+  "block.occultismjars.spirit_fire_chamber": "Câmara de Fogo Espiritual",
+  "tooltip.occultismjars.spirit_fire_chamber.lit": "Acesa",
+  "tooltip.occultismjars.spirit_fire_chamber.light": "Clique com uma Datura e acenda com uma pederneira. O giz muda a cor do fogo",
+  "tooltip.occultismjars.spirit_fire_chamber.use": "Funis e pipes alimentam ela; o resultado do Fogo Espiritual sai na hora",
+  "item.occultismjars.ritual_dummy.craft_spirit_fire_chamber": "Ritual: Criar Câmara de Fogo Espiritual",
+  "item.occultismjars.ritual_dummy.craft_spirit_fire_chamber.tooltip": "Uma caixa de vidro que mantém o Fogo Espiritual aceso pra crafting automático.",
+  "ritual.occultismjars.craft_spirit_fire_chamber.started": "Iniciando o ritual: Criar Câmara de Fogo Espiritual.",
+  "ritual.occultismjars.craft_spirit_fire_chamber.finished": "Ritual concluído com sucesso: Criar Câmara de Fogo Espiritual.",
+  "ritual.occultismjars.craft_spirit_fire_chamber.interrupted": "Interrupção no ritual: Criar Câmara de Fogo Espiritual.",
+  "ritual.occultismjars.craft_spirit_fire_chamber.conditions": "Nem todos os requisitos deste ritual foram cumpridos."
 }

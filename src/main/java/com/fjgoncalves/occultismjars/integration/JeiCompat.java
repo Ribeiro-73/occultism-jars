@@ -7,6 +7,7 @@ import com.fjgoncalves.occultismjars.blockentity.SpiritWorkerBlockEntity;
 import com.fjgoncalves.occultismjars.menu.SpiritWorkerMenu;
 import com.klikli_dev.occultism.crafting.recipe.CrushingRecipe;
 import com.klikli_dev.occultism.crafting.recipe.CrystallizeRecipe;
+import com.klikli_dev.occultism.crafting.recipe.SpiritFireRecipe;
 import com.klikli_dev.occultism.crafting.recipe.SpiritTradeRecipe;
 
 import mezz.jei.api.IModPlugin;
@@ -30,6 +31,8 @@ public class JeiCompat implements IModPlugin {
             RecipeType.createRecipeHolderType(ResourceLocation.fromNamespaceAndPath("occultism", "crystallize"));
     private static final RecipeType<RecipeHolder<SpiritTradeRecipe>> OCCULTISM_SPIRIT_TRADE =
             RecipeType.createRecipeHolderType(ResourceLocation.fromNamespaceAndPath("occultism", "spirit_trade"));
+    private static final RecipeType<RecipeHolder<SpiritFireRecipe>> OCCULTISM_SPIRIT_FIRE =
+            RecipeType.createRecipeHolderType(ResourceLocation.fromNamespaceAndPath("occultism", "spirit_fire"));
 
     // shown as catalysts; the cooking ones are left out so the blocks don't read as furnaces
     private static final List<RecipeType<?>> CATALYST_JOBS = List.of(OCCULTISM_CRUSHING, OCCULTISM_CRYSTALLIZE);
@@ -57,6 +60,7 @@ public class JeiCompat implements IModPlugin {
         }
         // traders have no tiers, so only the base can run them
         registration.addRecipeCatalyst(new ItemStack(OccultismJars.HOLOGRAPHIC_BASE_ITEM.get()), OCCULTISM_SPIRIT_TRADE);
+        registration.addRecipeCatalyst(new ItemStack(OccultismJars.SPIRIT_FIRE_CHAMBER_ITEM.get()), OCCULTISM_SPIRIT_FIRE);
     }
 
     @Override

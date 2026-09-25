@@ -1,0 +1,31 @@
+{
+  "type": "occultism:ritual",
+  "activation_item": {
+    "item": "occultism:book_of_binding_bound_foliot"
+  },
+  "duration": 60,
+  "ingredients": [
+    {
+      "item": "minecraft:flint_and_steel"
+    },
+    {
+      "item": "occultism:datura"
+    },
+    {
+      "item": "occultism:spirit_attuned_gem"
+    },
+    {
+      "tag": "c:glass_blocks/colorless"
+    }
+  ],
+  "pentacle_id": "occultism:summon_foliot",
+  "result": {
+    "count": 1,
+    "id": "occultismjars:spirit_fire_chamber"
+  },
+  "ritual_dummy": {
+    "count": 1,
+    "id": "occultismjars:ritual_dummy/craft_spirit_fire_chamber"
+  },
+  "ritual_type": "occultism:craft"
+}

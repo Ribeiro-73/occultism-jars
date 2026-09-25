@@ -29,5 +29,10 @@ public final class ModEvents {
                             ? base.getAutomationView() : null;
                 },
                 OccultismJars.HOLOGRAPHIC_BASE.get());
+
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                OccultismJars.SPIRIT_FIRE_CHAMBER_BE.get(),
+                (chamber, side) -> chamber.getAutomationView());
     }
 }

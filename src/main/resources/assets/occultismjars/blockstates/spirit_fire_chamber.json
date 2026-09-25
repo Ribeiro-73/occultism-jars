@@ -1,0 +1,53 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "occultismjars:block/spirit_fire_chamber"
+      }
+    },
+    {
+      "when": {
+        "stage": "datura"
+      },
+      "apply": {
+        "model": "occultismjars:block/spirit_fire_chamber_datura"
+      }
+    },
+    {
+      "when": {
+        "stage": "lit",
+        "color": "white"
+      },
+      "apply": {
+        "model": "occultismjars:block/spirit_fire_chamber_fire"
+      }
+    },
+    {
+      "when": {
+        "stage": "lit",
+        "color": "light_gray|gray|black|brown|red|orange|yellow|lime|green|cyan|light_blue|blue|purple|magenta|pink"
+      },
+      "apply": {
+        "model": "occultismjars:block/spirit_fire_chamber_fire_color"
+      }
+    },
+    {
+      "when": {
+        "stage": "lit",
+        "color": "rainbow"
+      },
+      "apply": {
+        "model": "occultismjars:block/spirit_fire_chamber_fire_rainbow"
+      }
+    },
+    {
+      "when": {
+        "stage": "lit",
+        "color": "void"
+      },
+      "apply": {
+        "model": "occultismjars:block/spirit_fire_chamber_fire_void"
+      }
+    }
+  ]
+}

@@ -28,6 +28,11 @@ Full documentation — setup, automation, config, tuning and an FAQ — is on th
   using the next one; it also cooks raw food and turns Cursed Honey into a Sweet
   Honey Heart. Harmful and instant effects are ignored. Only items the spirit can
   actually process go in.
+- **Spirit Fire Chamber.** A glass case that keeps Occultism's spirit fire burning.
+  Right-click it with Datura, then light it with a flint and steel; chalk changes
+  the colour, like the real fire. Hoppers and pipes feed it and the
+  `occultism:spirit_fire` result is ready to pull out at once. Dropping items on
+  it does nothing. Broken, it keeps its fire and colour.
 - **Same numbers as the real spirits.** Speed, output multiplier and operation
   count are read live from Occultism's own `occultism-server.toml`
   (`[spirit_job]`), so tuning the config affects both blocks too.
@@ -35,8 +40,9 @@ Full documentation — setup, automation, config, tuning and an FAQ — is on th
   and pull from the two output slots. Both halves of the base connect.
 - **Screen.** Right-click opens it: the input and output slots, a portrait of the
   spirit, and a progress bar.
-- **Crafting.** Both are made by ritual: the jar on the Foliot summoning pentacle
-  with a bound Foliot book, the base on the Marid one with a bound Marid book.
+- **Crafting.** All three are made by ritual: the jar and the chamber on the Foliot
+  summoning pentacle with a bound Foliot book, the base on the Marid one with a
+  bound Marid book.
 - **JEI:** both blocks are catalysts for crushing and crystallizing, and the
   recipe-transfer (`+`) button fills the input slot, cooking recipes included.
 

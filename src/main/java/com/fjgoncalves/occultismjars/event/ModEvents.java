@@ -1,7 +1,7 @@
 package com.fjgoncalves.occultismjars.event;
 
 import com.fjgoncalves.occultismjars.OccultismJars;
-import com.fjgoncalves.occultismjars.blockentity.CrusherJarBlockEntity;
+import com.fjgoncalves.occultismjars.blockentity.SpiritJarBlockEntity;
 
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -15,7 +15,7 @@ public final class ModEvents {
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(
                 Capabilities.ItemHandler.BLOCK,
-                OccultismJars.CRUSHER_JAR_BE.get(),
+                OccultismJars.SPIRIT_JAR_BE.get(),
                 (jar, side) -> jar.getAutomationView());
     }
 }

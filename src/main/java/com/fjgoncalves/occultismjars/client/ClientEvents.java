@@ -13,11 +13,11 @@ public final class ClientEvents {
 
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerBlockEntityRenderer(OccultismJars.CRUSHER_JAR_BE.get(), CrusherJarRenderer::new);
+        event.registerBlockEntityRenderer(OccultismJars.SPIRIT_JAR_BE.get(), SpiritJarRenderer::new);
     }
 
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
-        event.register(OccultismJars.CRUSHER_JAR_MENU.get(), CrusherJarScreen::new);
+        event.register(OccultismJars.SPIRIT_JAR_MENU.get(), SpiritJarScreen::new);
     }
 }

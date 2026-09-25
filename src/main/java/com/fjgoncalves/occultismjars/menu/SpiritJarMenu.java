@@ -1,7 +1,7 @@
 package com.fjgoncalves.occultismjars.menu;
 
 import com.fjgoncalves.occultismjars.OccultismJars;
-import com.fjgoncalves.occultismjars.blockentity.CrusherJarBlockEntity;
+import com.fjgoncalves.occultismjars.blockentity.SpiritJarBlockEntity;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -17,40 +17,40 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
 
-public class CrusherJarMenu extends AbstractContainerMenu {
+public class SpiritJarMenu extends AbstractContainerMenu {
 
-    private final CrusherJarBlockEntity jar;
+    private final SpiritJarBlockEntity jar;
     private final BlockPos pos;
     private final ContainerData data;
 
-    public CrusherJarMenu(int id, Inventory playerInv, RegistryFriendlyByteBuf buf) {
+    public SpiritJarMenu(int id, Inventory playerInv, RegistryFriendlyByteBuf buf) {
         this(id, playerInv, resolve(playerInv, buf.readBlockPos()), new SimpleContainerData(2));
     }
 
-    public CrusherJarMenu(int id, Inventory playerInv, CrusherJarBlockEntity jar) {
+    public SpiritJarMenu(int id, Inventory playerInv, SpiritJarBlockEntity jar) {
         this(id, playerInv, jar, jar.getDataAccess());
     }
 
-    private CrusherJarMenu(int id, Inventory playerInv, CrusherJarBlockEntity jar, ContainerData data) {
-        super(OccultismJars.CRUSHER_JAR_MENU.get(), id);
+    private SpiritJarMenu(int id, Inventory playerInv, SpiritJarBlockEntity jar, ContainerData data) {
+        super(OccultismJars.SPIRIT_JAR_MENU.get(), id);
         this.jar = jar;
         this.pos = jar.getBlockPos();
         this.data = data;
 
         IItemHandler inv = jar.getInventory();
-        this.addSlot(new SlotItemHandler(inv, CrusherJarBlockEntity.INPUT_SLOT, 134, 26) {
+        this.addSlot(new SlotItemHandler(inv, SpiritJarBlockEntity.INPUT_SLOT, 134, 26) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return jar.canCrush(stack);
             }
         });
-        this.addSlot(new SlotItemHandler(inv, CrusherJarBlockEntity.FIRST_OUTPUT_SLOT, 134, 54) {
+        this.addSlot(new SlotItemHandler(inv, SpiritJarBlockEntity.FIRST_OUTPUT_SLOT, 134, 54) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return false;
             }
         });
-        this.addSlot(new SlotItemHandler(inv, CrusherJarBlockEntity.FIRST_OUTPUT_SLOT + 1, 152, 54) {
+        this.addSlot(new SlotItemHandler(inv, SpiritJarBlockEntity.FIRST_OUTPUT_SLOT + 1, 152, 54) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return false;
@@ -77,12 +77,12 @@ public class CrusherJarMenu extends AbstractContainerMenu {
         return this.data.get(1);
     }
 
-    private static CrusherJarBlockEntity resolve(Inventory playerInv, BlockPos pos) {
+    private static SpiritJarBlockEntity resolve(Inventory playerInv, BlockPos pos) {
         BlockEntity be = playerInv.player.level().getBlockEntity(pos);
-        if (be instanceof CrusherJarBlockEntity found) {
+        if (be instanceof SpiritJarBlockEntity found) {
             return found;
         }
-        throw new IllegalStateException("No crusher jar at " + pos);
+        throw new IllegalStateException("No spirit jar at " + pos);
     }
 
     // client-side, for the portrait
@@ -107,11 +107,11 @@ public class CrusherJarMenu extends AbstractContainerMenu {
         ItemStack stack = slot.getItem();
         ItemStack original = stack.copy();
 
-        if (index < CrusherJarBlockEntity.SLOT_COUNT) {
-            if (!this.moveItemStackTo(stack, CrusherJarBlockEntity.SLOT_COUNT, this.slots.size(), true)) {
+        if (index < SpiritJarBlockEntity.SLOT_COUNT) {
+            if (!this.moveItemStackTo(stack, SpiritJarBlockEntity.SLOT_COUNT, this.slots.size(), true)) {
                 return ItemStack.EMPTY;
             }
-        } else if (!this.moveItemStackTo(stack, CrusherJarBlockEntity.INPUT_SLOT, CrusherJarBlockEntity.INPUT_SLOT + 1, false)) {
+        } else if (!this.moveItemStackTo(stack, SpiritJarBlockEntity.INPUT_SLOT, SpiritJarBlockEntity.INPUT_SLOT + 1, false)) {
             return ItemStack.EMPTY;
         }
 

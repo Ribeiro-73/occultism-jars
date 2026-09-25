@@ -1,10 +1,10 @@
 package com.fjgoncalves.occultismjars;
 
-import com.fjgoncalves.occultismjars.block.CrusherJarBlock;
-import com.fjgoncalves.occultismjars.blockentity.CrusherJarBlockEntity;
-import com.fjgoncalves.occultismjars.item.CrusherJarItem;
-import com.fjgoncalves.occultismjars.item.DemonExtractorBladeItem;
-import com.fjgoncalves.occultismjars.menu.CrusherJarMenu;
+import com.fjgoncalves.occultismjars.block.SpiritJarBlock;
+import com.fjgoncalves.occultismjars.blockentity.SpiritJarBlockEntity;
+import com.fjgoncalves.occultismjars.item.SpiritJarItem;
+import com.fjgoncalves.occultismjars.menu.SpiritJarMenu;
+import com.klikli_dev.occultism.common.item.DummyTooltipItem;
 
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -36,43 +36,42 @@ public final class OccultismJars {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
 
-    public static final DeferredBlock<CrusherJarBlock> CRUSHER_JAR = BLOCKS.registerBlock(
-            "crusher_jar",
-            CrusherJarBlock::new,
+    public static final DeferredBlock<SpiritJarBlock> SPIRIT_JAR = BLOCKS.registerBlock(
+            "spirit_jar",
+            SpiritJarBlock::new,
             BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_PURPLE)
                     .strength(1.5F)
                     .sound(SoundType.GLASS)
                     .noOcclusion());
 
-    public static final DeferredItem<CrusherJarItem> CRUSHER_JAR_ITEM =
-            ITEMS.registerItem("crusher_jar", props -> new CrusherJarItem(CRUSHER_JAR.get(), props));
+    public static final DeferredItem<SpiritJarItem> SPIRIT_JAR_ITEM =
+            ITEMS.registerItem("spirit_jar", props -> new SpiritJarItem(SPIRIT_JAR.get(), props));
 
-    public static final DeferredItem<DemonExtractorBladeItem> DEMON_EXTRACTOR_BLADE =
-            ITEMS.registerItem("demon_extractor_blade", DemonExtractorBladeItem::new);
+    public static final DeferredItem<DummyTooltipItem> RITUAL_DUMMY_CRAFT_SPIRIT_JAR =
+            ITEMS.registerItem("ritual_dummy/craft_spirit_jar", DummyTooltipItem::new);
 
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
             DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MODID);
 
-    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<CrusherJarBlockEntity>> CRUSHER_JAR_BE =
-            BLOCK_ENTITIES.register("crusher_jar",
-                    () -> BlockEntityType.Builder.of(CrusherJarBlockEntity::new, CRUSHER_JAR.get()).build(null));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SpiritJarBlockEntity>> SPIRIT_JAR_BE =
+            BLOCK_ENTITIES.register("spirit_jar",
+                    () -> BlockEntityType.Builder.of(SpiritJarBlockEntity::new, SPIRIT_JAR.get()).build(null));
 
     public static final DeferredRegister<MenuType<?>> MENUS =
             DeferredRegister.create(Registries.MENU, MODID);
 
-    public static final DeferredHolder<MenuType<?>, MenuType<CrusherJarMenu>> CRUSHER_JAR_MENU =
-            MENUS.register("crusher_jar", () -> IMenuTypeExtension.create(CrusherJarMenu::new));
+    public static final DeferredHolder<MenuType<?>, MenuType<SpiritJarMenu>> SPIRIT_JAR_MENU =
+            MENUS.register("spirit_jar", () -> IMenuTypeExtension.create(SpiritJarMenu::new));
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = CREATIVE_TABS.register(
             "main",
             () -> CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup." + MODID))
                     .withTabsBefore(CreativeModeTabs.SPAWN_EGGS)
-                    .icon(() -> new ItemStack(CRUSHER_JAR_ITEM.get()))
+                    .icon(() -> new ItemStack(SPIRIT_JAR_ITEM.get()))
                     .displayItems((params, output) -> {
-                        output.accept(CRUSHER_JAR_ITEM.get());
-                        output.accept(DEMON_EXTRACTOR_BLADE.get());
+                        output.accept(SPIRIT_JAR_ITEM.get());
                     })
                     .build());
 

@@ -1,7 +1,7 @@
 package com.fjgoncalves.occultismjars.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.fjgoncalves.occultismjars.blockentity.CrusherJarBlockEntity;
+import com.fjgoncalves.occultismjars.blockentity.SpiritJarBlockEntity;
 
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -10,11 +10,11 @@ import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 
-public class CrusherJarRenderer implements BlockEntityRenderer<CrusherJarBlockEntity> {
+public class SpiritJarRenderer implements BlockEntityRenderer<SpiritJarBlockEntity> {
 
     private final EntityRenderDispatcher entityRenderer;
 
-    public CrusherJarRenderer(BlockEntityRendererProvider.Context context) {
+    public SpiritJarRenderer(BlockEntityRendererProvider.Context context) {
         this.entityRenderer = context.getEntityRenderer();
     }
 
@@ -24,7 +24,7 @@ public class CrusherJarRenderer implements BlockEntityRenderer<CrusherJarBlockEn
     }
 
     @Override
-    public void render(CrusherJarBlockEntity jar, float partialTick, PoseStack pose, MultiBufferSource buffers,
+    public void render(SpiritJarBlockEntity jar, float partialTick, PoseStack pose, MultiBufferSource buffers,
                        int packedLight, int packedOverlay) {
         Entity spirit = jar.getDisplayEntity();
         if (spirit == null) {
@@ -32,7 +32,7 @@ public class CrusherJarRenderer implements BlockEntityRenderer<CrusherJarBlockEn
         }
 
         // fixed on-screen height regardless of the spirit's real size
-        float scale = Mth.clamp(0.8F / Math.max(spirit.getBbHeight(), 0.1F), 0.15F, 0.5F);
+        float scale = Mth.clamp(0.7375F / Math.max(spirit.getBbHeight(), 0.1F), 0.15F, 0.5F);
 
         pose.pushPose();
         pose.translate(0.5F, 0.05F, 0.5F);

@@ -1,7 +1,19 @@
 {
   "itemGroup.occultismjars": "Occultism Jars",
-  "block.occultismjars.crusher_jar": "Jarro Triturador",
-  "item.occultismjars.demon_extractor_blade": "Lâmina Extratora de Demônios",
+  "block.occultismjars.spirit_jar": "Jarro Espiritual",
   "tooltip.occultismjars.contains": "Contém: %s",
-  "tooltip.occultismjars.demon_extractor_blade": "Clique com o botão direito num Jarro Triturador pra soltar o demônio preso"
+  "tooltip.occultismjars.spirit_name": "%2$s %1$s",
+  "container.occultismjars.spirit_jar": "%s - %s",
+  "job.occultismjars.crusher": "Triturador",
+  "job.occultismjars.smelter": "Fundidor",
+  "job.occultismjars.crystallizer": "Cristalizador",
+  "tooltip.occultismjars.spirit_jar.capture": "Clique com o botão direito num Foliot ou Djinni trabalhador com o jarro vazio pra prender ele",
+  "tooltip.occultismjars.spirit_jar.release": "Coloque o jarro e clique com o botão direito agachado, de mão vazia, pra soltar o espírito",
+  "message.occultismjars.too_strong": "Esse espírito é forte demais pra um jarro",
+  "item.occultismjars.ritual_dummy.craft_spirit_jar": "Ritual: Criar Jarro Espiritual",
+  "item.occultismjars.ritual_dummy.craft_spirit_jar.tooltip": "Um jarro de vidro que prende um Foliot ou Djinni trabalhador.",
+  "ritual.occultismjars.craft_spirit_jar.started": "Iniciando o ritual: Criar Jarro Espiritual.",
+  "ritual.occultismjars.craft_spirit_jar.finished": "Ritual concluído com sucesso: Criar Jarro Espiritual.",
+  "ritual.occultismjars.craft_spirit_jar.interrupted": "Interrupção no ritual: Criar Jarro Espiritual.",
+  "ritual.occultismjars.craft_spirit_jar.conditions": "Nem todos os requisitos deste ritual foram cumpridos."
 }

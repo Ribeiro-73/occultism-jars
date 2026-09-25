@@ -1,7 +1,7 @@
 package com.fjgoncalves.occultismjars.client;
 
 import com.fjgoncalves.occultismjars.Config;
-import com.fjgoncalves.occultismjars.menu.CrusherJarMenu;
+import com.fjgoncalves.occultismjars.menu.SpiritJarMenu;
 import com.klikli_dev.occultism.client.gui.spirit.SpiritGui;
 import com.mojang.blaze3d.systems.RenderSystem;
 
@@ -16,7 +16,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 
-public class CrusherJarScreen extends AbstractContainerScreen<CrusherJarMenu> {
+public class SpiritJarScreen extends AbstractContainerScreen<SpiritJarMenu> {
 
     private static final ResourceLocation TEXTURE =
             ResourceLocation.fromNamespaceAndPath("occultism", "textures/gui/inventory_spirit.png");
@@ -26,7 +26,7 @@ public class CrusherJarScreen extends AbstractContainerScreen<CrusherJarMenu> {
     private LivingEntity portrait;
     private boolean portraitResolved;
 
-    public CrusherJarScreen(CrusherJarMenu menu, Inventory playerInv, Component title) {
+    public SpiritJarScreen(SpiritJarMenu menu, Inventory playerInv, Component title) {
         super(menu, playerInv, title);
         this.imageWidth = 175;
         this.imageHeight = 165;

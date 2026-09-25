@@ -2,11 +2,13 @@ package com.fjgoncalves.occultismjars.event;
 
 import com.fjgoncalves.occultismjars.ModComponents;
 import com.fjgoncalves.occultismjars.OccultismJars;
-import com.fjgoncalves.occultismjars.content.CrusherType;
-import com.fjgoncalves.occultismjars.item.CrusherJarItem;
+import com.fjgoncalves.occultismjars.content.SpiritJob;
+import com.fjgoncalves.occultismjars.content.SpiritType;
+import com.fjgoncalves.occultismjars.item.SpiritJarItem;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
@@ -40,12 +42,12 @@ public final class CaptureHandler {
     }
 
     private static boolean tryCapture(Player player, ItemStack stack, Entity target) {
-        if (!(stack.getItem() instanceof CrusherJarItem) || stack.has(ModComponents.CONTAINED_CRUSHER.get())) {
+        if (!(stack.getItem() instanceof SpiritJarItem) || stack.has(ModComponents.CONTAINED_SPIRIT.get())) {
             return false;
         }
 
         ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(target.getType());
-        CrusherType type = CrusherType.byEntityId(entityId);
+        SpiritType type = SpiritType.byEntityId(entityId);
         if (type == null) {
             return false;
         }
@@ -59,16 +61,25 @@ public final class CaptureHandler {
         if (!target.save(probe)) {
             return false;
         }
-        String job = probe.getCompound("spiritJob").getString("factoryId");
-        if (!job.startsWith(CrusherType.CRUSHER_JOB_PREFIX)) {
+        String factoryId = probe.getCompound("spiritJob").getString("factoryId");
+        SpiritJob job = SpiritJob.byFactoryId(factoryId);
+        if (job == null) {
             return false;
+        }
+        int tier = job.tierOf(factoryId);
+        if (tier < 1) {
+            return false;
+        }
+        if (tier > job.jarMaxTier()) {
+            player.displayClientMessage(Component.translatable("message.occultismjars.too_strong"), true);
+            return true;
         }
 
         // pull the in-progress item off the entity so it becomes the jar's input (given back on release)
-        ItemStack crushing = ItemStack.EMPTY;
+        ItemStack held = ItemStack.EMPTY;
         if (target instanceof LivingEntity living) {
-            crushing = living.getMainHandItem().copy();
-            if (!crushing.isEmpty()) {
+            held = living.getMainHandItem().copy();
+            if (!held.isEmpty()) {
                 living.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
             }
         }
@@ -79,15 +90,16 @@ public final class CaptureHandler {
         }
 
         CompoundTag stored = new CompoundTag();
-        stored.putInt("tier", type.tier());
+        stored.putInt("tier", tier);
+        stored.putString("job", job.getName());
         stored.putString("entity", entityId.toString());
         stored.put("data", entityData);
-        if (!crushing.isEmpty()) {
-            stored.put("heldItem", crushing.save(player.level().registryAccess()));
+        if (!held.isEmpty()) {
+            stored.put("heldItem", held.save(player.level().registryAccess()));
         }
 
         ItemStack filled = stack.copyWithCount(1);
-        filled.set(ModComponents.CONTAINED_CRUSHER.get(), stored);
+        filled.set(ModComponents.CONTAINED_SPIRIT.get(), stored);
         stack.shrink(1);
         if (!player.addItem(filled)) {
             player.drop(filled, false);

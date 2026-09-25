@@ -2,14 +2,14 @@
   "parent": "block/block",
   "render_type": "minecraft:translucent",
   "textures": {
-    "particle": "occultismjars:block/crusher_jar_glass",
-    "glass": "occultismjars:block/crusher_jar_glass",
-    "neck": "occultismjars:block/crusher_jar_neck",
-    "lid0": "occultismjars:block/crusher_jar_lid_0",
-    "lid1": "occultismjars:block/crusher_jar_lid_1",
-    "lid2": "occultismjars:block/crusher_jar_lid_2",
-    "lid3": "occultismjars:block/crusher_jar_lid_3",
-    "lid4": "occultismjars:block/crusher_jar_lid_4"
+    "particle": "occultismjars:block/spirit_jar_glass",
+    "glass": "occultismjars:block/spirit_jar_glass",
+    "neck": "occultismjars:block/spirit_jar_neck",
+    "lid0": "occultismjars:block/spirit_jar_lid_0",
+    "lid1": "occultismjars:block/spirit_jar_lid_1",
+    "lid2": "occultismjars:block/spirit_jar_lid_2",
+    "lid3": "occultismjars:block/spirit_jar_lid_3",
+    "lid4": "occultismjars:block/spirit_jar_lid_4"
   },
   "elements": [
     {

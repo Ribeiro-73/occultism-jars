@@ -7,7 +7,7 @@ public final class Config {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
     public static final ModConfigSpec.BooleanValue PLAY_CRUSHING_SOUND = BUILDER
-            .comment("Whether a crusher jar plays a sound while it works.")
+            .comment("Whether a spirit jar plays a sound while it works.")
             .define("playCrushingSound", true);
 
     public static final ModConfigSpec.BooleanValue RENDER_TRAPPED_SPIRIT = BUILDER

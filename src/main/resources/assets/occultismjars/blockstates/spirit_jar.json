@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "occultismjars:block/spirit_jar" },
+    "facing=south": { "model": "occultismjars:block/spirit_jar" },
+    "facing=west": { "model": "occultismjars:block/spirit_jar" },
+    "facing=east": { "model": "occultismjars:block/spirit_jar" }
+  }
+}

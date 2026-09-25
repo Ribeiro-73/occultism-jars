@@ -1,7 +1,19 @@
 {
   "itemGroup.occultismjars": "Occultism Jars",
-  "block.occultismjars.crusher_jar": "Crusher Jar",
-  "item.occultismjars.demon_extractor_blade": "Demon Extractor Blade",
+  "block.occultismjars.spirit_jar": "Spirit Jar",
   "tooltip.occultismjars.contains": "Contains: %s",
-  "tooltip.occultismjars.demon_extractor_blade": "Right-click a Crusher Jar to release its demon"
+  "tooltip.occultismjars.spirit_name": "%1$s %2$s",
+  "container.occultismjars.spirit_jar": "%s - %s",
+  "job.occultismjars.crusher": "Crusher",
+  "job.occultismjars.smelter": "Smelter",
+  "job.occultismjars.crystallizer": "Crystallizer",
+  "tooltip.occultismjars.spirit_jar.capture": "Right-click a working Foliot or Djinni with an empty jar to trap it",
+  "tooltip.occultismjars.spirit_jar.release": "Place the jar and shift + right-click it with an empty hand to release the spirit",
+  "message.occultismjars.too_strong": "This spirit is too powerful for a jar",
+  "item.occultismjars.ritual_dummy.craft_spirit_jar": "Ritual: Craft Spirit Jar",
+  "item.occultismjars.ritual_dummy.craft_spirit_jar.tooltip": "A glass jar that can hold a working Foliot or Djinni.",
+  "ritual.occultismjars.craft_spirit_jar.started": "Starting the ritual: Craft Spirit Jar.",
+  "ritual.occultismjars.craft_spirit_jar.finished": "Ritual completed successfully: Craft Spirit Jar.",
+  "ritual.occultismjars.craft_spirit_jar.interrupted": "Interruption in the ritual: Craft Spirit Jar.",
+  "ritual.occultismjars.craft_spirit_jar.conditions": "Not all requirements for this ritual are met."
 }

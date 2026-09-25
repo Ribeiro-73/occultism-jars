@@ -6,13 +6,13 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "occultismjars:crusher_jar",
+          "name": "occultismjars:spirit_jar",
           "functions": [
             {
               "function": "minecraft:copy_components",
               "source": "block_entity",
               "include": [
-                "occultismjars:contained_crusher"
+                "occultismjars:contained_spirit"
               ]
             }
           ]

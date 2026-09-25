@@ -7,7 +7,10 @@ import org.jetbrains.annotations.Nullable;
 import com.fjgoncalves.occultismjars.Config;
 import com.fjgoncalves.occultismjars.ModComponents;
 import com.fjgoncalves.occultismjars.OccultismJars;
-import com.fjgoncalves.occultismjars.menu.CrusherJarMenu;
+import com.fjgoncalves.occultismjars.block.SpiritJarBlock;
+import com.fjgoncalves.occultismjars.content.SpiritJob;
+import com.fjgoncalves.occultismjars.item.SpiritJarItem;
+import com.fjgoncalves.occultismjars.menu.SpiritJarMenu;
 import com.klikli_dev.occultism.Occultism;
 import com.klikli_dev.occultism.config.OccultismServerConfig;
 import com.klikli_dev.occultism.crafting.recipe.CrushingRecipe;
@@ -44,7 +47,7 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 
-public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
+public class SpiritJarBlockEntity extends BlockEntity implements MenuProvider {
 
     public static final int INPUT_SLOT = 0;
     public static final int FIRST_OUTPUT_SLOT = 1;
@@ -89,8 +92,8 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
     private Entity displayEntity;
     private boolean displayDirty = true;
 
-    public CrusherJarBlockEntity(BlockPos pos, BlockState state) {
-        super(OccultismJars.CRUSHER_JAR_BE.get(), pos, state);
+    public SpiritJarBlockEntity(BlockPos pos, BlockState state) {
+        super(OccultismJars.SPIRIT_JAR_BE.get(), pos, state);
     }
 
     public IItemHandler getAutomationView() {
@@ -116,6 +119,15 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
 
     public int getTier() {
         return this.contained == null ? 0 : this.contained.getInt("tier");
+    }
+
+    @Nullable
+    public SpiritJob getJob() {
+        if (this.contained == null) {
+            return null;
+        }
+        SpiritJob job = SpiritJob.byName(this.contained.getString("job"));
+        return job != null ? job : SpiritJob.CRUSHER;
     }
 
     public void setContained(CompoundTag tag) {
@@ -181,17 +193,21 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
 
     @Override
     public Component getDisplayName() {
-        return Component.translatable("block.occultismjars.crusher_jar");
+        Component jarName = Component.translatable("block.occultismjars.spirit_jar");
+        if (this.contained == null) {
+            return jarName;
+        }
+        return Component.translatable("container.occultismjars.spirit_jar", jarName, SpiritJarItem.describe(this.contained));
     }
 
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int id, Inventory playerInventory, Player player) {
-        return new CrusherJarMenu(id, playerInventory, this);
+        return new SpiritJarMenu(id, playerInventory, this);
     }
 
-    public static void serverTick(Level level, BlockPos pos, BlockState state, CrusherJarBlockEntity jar) {
-        if (jar.isEmpty()) {
+    public static void serverTick(Level level, BlockPos pos, BlockState state, SpiritJarBlockEntity jar) {
+        if (jar.getJob() != SpiritJob.CRUSHER) {
             jar.stopProgress();
             return;
         }
@@ -278,6 +294,10 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
         if (this.level == null || stack.isEmpty()) {
             return false;
         }
+        SpiritJob job = this.getJob();
+        if (job != null && job != SpiritJob.CRUSHER) {
+            return false;
+        }
         int tier = crusherSettings(Mth.clamp(this.getTier(), 1, 4)).tier.get();
         return this.level.getRecipeManager()
                 .getRecipeFor(OccultismRecipes.CRUSHING_TYPE.get(), new TieredSingleRecipeInput(stack, tier), this.level)
@@ -302,7 +322,15 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
             }
             if (this.displayEntity != null) {
                 this.displayEntity.setNoGravity(true);
-                this.displayEntity.setYRot(-20.0F);
+                float yaw = this.getBlockState().hasProperty(SpiritJarBlock.FACING)
+                        ? this.getBlockState().getValue(SpiritJarBlock.FACING).toYRot() : 0.0F;
+                this.displayEntity.setYRot(yaw);
+                if (this.displayEntity instanceof LivingEntity living) {
+                    living.yBodyRot = yaw;
+                    living.yBodyRotO = yaw;
+                    living.yHeadRot = yaw;
+                    living.yHeadRotO = yaw;
+                }
                 this.displayEntity.setPos(this.worldPosition.getX() + 0.5, this.worldPosition.getY(), this.worldPosition.getZ() + 0.5);
             }
         }
@@ -324,7 +352,7 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
     protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
         super.saveAdditional(tag, registries);
         // empty update packets get dropped, so always write something
-        tag.putBoolean("hasCrusher", this.contained != null);
+        tag.putBoolean("hasSpirit", this.contained != null);
         tag.putInt("progress", this.progress);
         tag.put("inventory", this.inventory.serializeNBT(registries));
         if (this.contained != null) {
@@ -335,7 +363,7 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     protected void applyImplicitComponents(DataComponentInput input) {
         super.applyImplicitComponents(input);
-        CompoundTag stored = input.get(ModComponents.CONTAINED_CRUSHER.get());
+        CompoundTag stored = input.get(ModComponents.CONTAINED_SPIRIT.get());
         if (stored == null) {
             this.contained = null;
             return;
@@ -355,14 +383,14 @@ public class CrusherJarBlockEntity extends BlockEntity implements MenuProvider {
     protected void collectImplicitComponents(DataComponentMap.Builder components) {
         super.collectImplicitComponents(components);
         if (this.contained != null) {
-            components.set(ModComponents.CONTAINED_CRUSHER.get(), this.contained.copy());
+            components.set(ModComponents.CONTAINED_SPIRIT.get(), this.contained.copy());
         }
     }
 
     @Override
     public void removeComponentsFromTag(CompoundTag tag) {
         tag.remove("contained");
-        tag.remove("hasCrusher");
+        tag.remove("hasSpirit");
     }
 
     @Override

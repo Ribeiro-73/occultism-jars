@@ -31,7 +31,7 @@ public class SpiritJarBlock extends Block implements EntityBlock {
 
     public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
 
-    private static final VoxelShape SHAPE = Block.box(3, 0, 3, 13, 16, 13);
+    private static final VoxelShape SHAPE = Block.box(4, 0, 4, 12, 15, 12);
 
     public SpiritJarBlock(BlockBehaviour.Properties properties) {
         super(properties);

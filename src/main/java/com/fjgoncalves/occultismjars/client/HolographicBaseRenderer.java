@@ -20,20 +20,20 @@ import net.minecraft.world.phys.AABB;
 
 public class HolographicBaseRenderer implements BlockEntityRenderer<HolographicBaseBlockEntity> {
 
-    // free space between the bottom and top plates, in blocks (1 pixel = 1/16)
-    private static final float SPACE_BOTTOM = 3.0F / 16.0F;
-    private static final float SPACE_TOP = 29.0F / 16.0F;
+    // free space between the gold rings, in blocks (1 pixel = 1/16)
+    private static final float SPACE_BOTTOM = 4.0F / 16.0F;
+    private static final float SPACE_TOP = 30.0F / 16.0F;
     private static final float MARGIN = 1.0F / 16.0F;
     private static final float MAX_WIDTH = 12.0F / 16.0F;
 
     // ARGB: alpha 0x88 = about half see-through
     private static final int HOLOGRAM_COLOR = 0x88A259FF;
 
-    // where the gem sits, relative to the base's front (the side facing whoever placed it)
-    private static final float GEM_HEIGHT = 4.0F / 16.0F;
-    private static final float GEM_FORWARD = 5.5F / 16.0F;
-    private static final float GEM_TILT = 30.0F;
-    private static final float GEM_SCALE = 0.35F;
+    // where the gem sits: on the tilted panel at the front (the side facing whoever placed it)
+    private static final float GEM_HEIGHT = 4.1F / 16.0F;
+    private static final float GEM_FORWARD = 6.55F / 16.0F;
+    private static final float GEM_TILT = 45.0F;
+    private static final float GEM_SCALE = 0.3F;
 
     private final EntityRenderDispatcher entityRenderer;
     private final ItemRenderer itemRenderer;

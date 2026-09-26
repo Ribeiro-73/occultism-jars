@@ -21,6 +21,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
@@ -30,14 +31,19 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.common.ItemAbilities;
 
-// a glass case with Occultism's spirit fire inside; items piped in are converted on the spot
+// a stone and gold frame with Occultism's spirit fire inside; items piped in are converted on the spot
 public class SpiritFireChamberBlock extends Block implements EntityBlock {
 
     public static final EnumProperty<Stage> STAGE = EnumProperty.create("stage", Stage.class);
     // same property as the real spirit fire, so chalk colours and tints line up with it
     public static final EnumProperty<ColorBlockState> COLOR = SpiritFireBlock.COLOR;
+
+    // the frame stands 1 pixel in from every side
+    private static final VoxelShape SHAPE = Block.box(1, 0, 1, 15, 16, 15);
 
     private static Map<Item, ColorBlockState> chalkColors;
 
@@ -51,6 +57,11 @@ public class SpiritFireChamberBlock extends Block implements EntityBlock {
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(STAGE, COLOR);
+    }
+
+    @Override
+    protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return SHAPE;
     }
 
     public static boolean isLit(BlockState state) {

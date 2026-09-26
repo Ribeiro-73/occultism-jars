@@ -2,7 +2,7 @@
 
 [![build](https://github.com/Ribeiro-73/occultism-jars/actions/workflows/build.yml/badge.svg)](https://github.com/Ribeiro-73/occultism-jars/actions/workflows/build.yml)
 
-An [Occultism](https://modrinth.com/mod/occultism) addon for NeoForge 1.21.1.
+An [Occultism](https://modrinth.com/mod/occultism) addon for NeoForge 26.1.2.
 
 Working spirits (crushers, smelters, crystallizers and traders) do their job inside a
 block instead of wandering around and scattering dropped items.
@@ -48,7 +48,7 @@ Full documentation — setup, automation, config, tuning and an FAQ — is on th
 
 ## Building
 
-Requires JDK 21. Occultism and JEI are pulled from their mavens (Modrinth and
+Requires JDK 25. Occultism and JEI are pulled from their mavens (Modrinth and
 BlameJared), so a plain
 
 ```bash

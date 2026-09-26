@@ -1,6 +1,6 @@
 package com.fjgoncalves.occultismjars.blockentity;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.fjgoncalves.occultismjars.OccultismJars;
 import com.fjgoncalves.occultismjars.block.SpiritFireChamberBlock;
@@ -9,8 +9,7 @@ import com.klikli_dev.occultism.registry.OccultismRecipes;
 import com.klikli_dev.occultism.registry.OccultismSounds;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -18,8 +17,13 @@ import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.item.ItemStacksResourceHandler;
+import net.neoforged.neoforge.transfer.transaction.RootCommitJournal;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 
 // no ticking and no menu: an item offered by a hopper or pipe is turned into its spirit fire result
 // right away, and the results wait in a small buffer until something pulls them out
@@ -27,15 +31,18 @@ public class SpiritFireChamberBlockEntity extends BlockEntity {
 
     private static final int OUTPUT_SLOTS = 4;
 
-    private final ItemStackHandler outputs = new ItemStackHandler(OUTPUT_SLOTS) {
+    private final ItemStacksResourceHandler outputs = new ItemStacksResourceHandler(OUTPUT_SLOTS) {
         @Override
-        protected void onContentsChanged(int slot) {
+        protected void onContentsChanged(int index, ItemStack previousContents) {
             setChanged();
         }
     };
 
     // slot 0 is where things go in (always shows empty), slots 1..4 are the results
-    private final IItemHandler automationView = new AutomationView();
+    private final ResourceHandler<ItemResource> automationView = new AutomationView();
+
+    // the chime only plays once the burn really happens, not for a pipe that is just asking
+    private final RootCommitJournal burnSound = new RootCommitJournal(this::playBurnSound);
 
     // last recipe lookup, so a stream of the same item doesn't search every time
     private ItemStack cachedInput = ItemStack.EMPTY;
@@ -47,19 +54,19 @@ public class SpiritFireChamberBlockEntity extends BlockEntity {
         super(OccultismJars.SPIRIT_FIRE_CHAMBER_BE.get(), pos, state);
     }
 
-    public IItemHandler getAutomationView() {
+    public ResourceHandler<ItemResource> getAutomationView() {
         return this.automationView;
     }
 
     @Nullable
     private SpiritFireRecipe recipeFor(ItemStack input) {
-        if (this.level == null || input.isEmpty()) {
+        if (!(this.level instanceof ServerLevel server) || input.isEmpty()) {
             return null;
         }
         if (!ItemStack.isSameItemSameComponents(this.cachedInput, input)) {
             this.cachedInput = input.copyWithCount(1);
-            this.cachedRecipe = this.level.getRecipeManager()
-                    .getRecipeFor(OccultismRecipes.SPIRIT_FIRE_TYPE.get(), new SingleRecipeInput(this.cachedInput), this.level)
+            this.cachedRecipe = server.recipeAccess()
+                    .getRecipeFor(OccultismRecipes.SPIRIT_FIRE_TYPE.get(), new SingleRecipeInput(this.cachedInput), server)
                     .orElse(null);
         }
         return this.cachedRecipe == null ? null : this.cachedRecipe.value();
@@ -70,47 +77,49 @@ public class SpiritFireChamberBlockEntity extends BlockEntity {
     }
 
     // how many of this result the buffer can still take
-    private int roomFor(ItemStack result) {
+    private int roomFor(ItemResource result) {
         int room = 0;
         for (int slot = 0; slot < OUTPUT_SLOTS; slot++) {
-            ItemStack held = this.outputs.getStackInSlot(slot);
-            if (held.isEmpty()) {
-                room += result.getMaxStackSize();
-            } else if (ItemStack.isSameItemSameComponents(held, result)) {
-                room += held.getMaxStackSize() - held.getCount();
+            ItemResource held = this.outputs.getResource(slot);
+            if (held.isEmpty() || held.equals(result)) {
+                room += result.getMaxStackSize() - this.outputs.getAmountAsInt(slot);
             }
         }
         return room;
     }
 
-    private ItemStack burn(ItemStack stack, boolean simulate) {
+    private int burn(ItemResource input, int amount, TransactionContext transaction) {
         if (!this.isLit()) {
-            return stack;
+            return 0;
         }
+        ItemStack stack = input.toStack();
         SpiritFireRecipe recipe = this.recipeFor(stack);
         if (recipe == null) {
-            return stack;
+            return 0;
         }
-        ItemStack result = recipe.assemble(new SingleRecipeInput(stack.copyWithCount(1)), this.level.registryAccess());
+        ItemStack result = recipe.assemble(new SingleRecipeInput(stack));
         if (result.isEmpty()) {
-            return stack;
+            return 0;
         }
-        int burned = Math.min(stack.getCount(), this.roomFor(result) / result.getCount());
+        ItemResource resultResource = ItemResource.of(result);
+        int burned = Math.min(amount, this.roomFor(resultResource) / result.getCount());
         if (burned <= 0) {
-            return stack;
+            return 0;
         }
-        if (!simulate) {
-            ItemStack produced = result.copyWithCount(result.getCount() * burned);
-            for (int slot = 0; slot < OUTPUT_SLOTS && !produced.isEmpty(); slot++) {
-                produced = this.outputs.insertItem(slot, produced, false);
-            }
-            this.playBurnSound();
+        int produced = result.getCount() * burned;
+        int inserted = 0;
+        for (int slot = 0; slot < OUTPUT_SLOTS && inserted < produced; slot++) {
+            inserted += this.outputs.insert(slot, resultResource, produced - inserted, transaction);
         }
-        return stack.copyWithCount(stack.getCount() - burned);
+        this.burnSound.updateSnapshots(transaction);
+        return burned;
     }
 
     // Occultism's ritual chime, at most once a second so a busy pipe doesn't drown everything
     private void playBurnSound() {
+        if (this.level == null) {
+            return;
+        }
         long now = this.level.getGameTime();
         if (now - this.lastSound >= 20) {
             this.lastSound = now;
@@ -123,57 +132,65 @@ public class SpiritFireChamberBlockEntity extends BlockEntity {
             return;
         }
         for (int slot = 0; slot < OUTPUT_SLOTS; slot++) {
-            ItemStack stack = this.outputs.getStackInSlot(slot);
+            ItemStack stack = this.outputs.getResource(slot).toStack(this.outputs.getAmountAsInt(slot));
             if (!stack.isEmpty()) {
                 Block.popResource(this.level, this.worldPosition, stack);
-                this.outputs.setStackInSlot(slot, ItemStack.EMPTY);
+                this.outputs.set(slot, ItemResource.EMPTY, 0);
             }
         }
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        if (tag.contains("outputs")) {
-            this.outputs.deserializeNBT(registries, tag.getCompound("outputs"));
-        }
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        this.dropContents();
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        tag.put("outputs", this.outputs.serializeNBT(registries));
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        input.child("outputs").ifPresent(this.outputs::deserialize);
     }
 
-    private final class AutomationView implements IItemHandler {
+    @Override
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        this.outputs.serialize(output.child("outputs"));
+    }
+
+    private final class AutomationView implements ResourceHandler<ItemResource> {
         @Override
-        public int getSlots() {
+        public int size() {
             return OUTPUT_SLOTS + 1;
         }
 
         @Override
-        public ItemStack getStackInSlot(int slot) {
-            return slot == 0 ? ItemStack.EMPTY : outputs.getStackInSlot(slot - 1);
+        public ItemResource getResource(int index) {
+            return index == 0 ? ItemResource.EMPTY : outputs.getResource(index - 1);
         }
 
         @Override
-        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-            return slot == 0 && !stack.isEmpty() ? burn(stack, simulate) : stack;
+        public long getAmountAsLong(int index) {
+            return index == 0 ? 0 : outputs.getAmountAsLong(index - 1);
         }
 
         @Override
-        public ItemStack extractItem(int slot, int amount, boolean simulate) {
-            return slot == 0 ? ItemStack.EMPTY : outputs.extractItem(slot - 1, amount, simulate);
+        public long getCapacityAsLong(int index, ItemResource resource) {
+            return index == 0 ? resource.getMaxStackSize() : outputs.getCapacityAsLong(index - 1, resource);
         }
 
         @Override
-        public int getSlotLimit(int slot) {
-            return 64;
+        public boolean isValid(int index, ItemResource resource) {
+            return index == 0 && isLit() && recipeFor(resource.toStack()) != null;
         }
 
         @Override
-        public boolean isItemValid(int slot, ItemStack stack) {
-            return slot == 0 && isLit() && recipeFor(stack) != null;
+        public int insert(int index, ItemResource resource, int amount, TransactionContext transaction) {
+            return index == 0 && !resource.isEmpty() && amount > 0 ? burn(resource, amount, transaction) : 0;
+        }
+
+        @Override
+        public int extract(int index, ItemResource resource, int amount, TransactionContext transaction) {
+            return index == 0 ? 0 : outputs.extract(index - 1, resource, amount, transaction);
         }
     }
 }

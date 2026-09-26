@@ -1,6 +1,6 @@
 package com.fjgoncalves.occultismjars.item;
 
-import java.util.List;
+import java.util.function.Consumer;
 
 import com.fjgoncalves.occultismjars.block.SpiritFireChamberBlock;
 
@@ -11,6 +11,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.component.BlockItemStateProperties;
 import net.minecraft.world.level.block.Block;
 
@@ -21,15 +22,16 @@ public class SpiritFireChamberItem extends BlockItem {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        super.appendHoverText(stack, context, tooltip, flag);
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip,
+            TooltipFlag flag) {
+        super.appendHoverText(stack, context, display, tooltip, flag);
         // a chamber broken while lit keeps its fire
         SpiritFireChamberBlock.Stage stage = stack.getOrDefault(DataComponents.BLOCK_STATE, BlockItemStateProperties.EMPTY)
                 .get(SpiritFireChamberBlock.STAGE);
         if (stage == SpiritFireChamberBlock.Stage.LIT) {
-            tooltip.add(Component.translatable("tooltip.occultismjars.spirit_fire_chamber.lit").withStyle(ChatFormatting.LIGHT_PURPLE));
+            tooltip.accept(Component.translatable("tooltip.occultismjars.spirit_fire_chamber.lit").withStyle(ChatFormatting.LIGHT_PURPLE));
         }
-        tooltip.add(Component.translatable("tooltip.occultismjars.spirit_fire_chamber.light").withStyle(ChatFormatting.DARK_GRAY));
-        tooltip.add(Component.translatable("tooltip.occultismjars.spirit_fire_chamber.use").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.accept(Component.translatable("tooltip.occultismjars.spirit_fire_chamber.light").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.accept(Component.translatable("tooltip.occultismjars.spirit_fire_chamber.use").withStyle(ChatFormatting.DARK_GRAY));
     }
 }

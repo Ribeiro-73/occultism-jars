@@ -1,10 +1,13 @@
 package com.fjgoncalves.occultismjars.client;
 
+import java.util.List;
+
 import com.fjgoncalves.occultismjars.OccultismJars;
 import com.fjgoncalves.occultismjars.block.SpiritFireChamberBlock;
 import com.klikli_dev.occultism.common.block.SpiritFireBlock;
 import com.klikli_dev.occultism.registry.OccultismBlocks;
 
+import net.minecraft.client.color.block.BlockTintSource;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -28,14 +31,19 @@ public final class ClientEvents {
 
     // the chamber's fire is tinted by the real spirit fire, so chalk colours look exactly the same
     @SubscribeEvent
-    public static void registerBlockColors(RegisterColorHandlersEvent.Block event) {
-        event.register((state, level, pos, tintIndex) -> {
+    public static void registerBlockColors(RegisterColorHandlersEvent.BlockTintSources event) {
+        event.register(List.of(fireTint(0), fireTint(1)), OccultismJars.SPIRIT_FIRE_CHAMBER.get());
+    }
+
+    private static BlockTintSource fireTint(int layer) {
+        return state -> {
             if (!SpiritFireChamberBlock.isLit(state)) {
                 return -1;
             }
             SpiritFireBlock fire = (SpiritFireBlock) OccultismBlocks.SPIRIT_FIRE.get();
-            return fire.getColor(fire.defaultBlockState().setValue(SpiritFireBlock.COLOR,
-                    state.getValue(SpiritFireChamberBlock.COLOR)), tintIndex);
-        }, OccultismJars.SPIRIT_FIRE_CHAMBER.get());
+            int color = fire.getColor(fire.defaultBlockState().setValue(SpiritFireBlock.COLOR,
+                    state.getValue(SpiritFireChamberBlock.COLOR)), layer);
+            return (color & 0xFF000000) == 0 ? color | 0xFF000000 : color;
+        };
     }
 }

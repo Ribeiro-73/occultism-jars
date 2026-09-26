@@ -1,18 +1,16 @@
 {
   "type": "occultism:ritual",
-  "activation_item": {
-    "item": "occultism:book_of_binding_bound_marid"
-  },
+  "activation_item": "occultism:book_of_binding_bound_marid",
   "duration": 240,
   "ingredients": [
     {
-      "type": "neoforge:components",
+      "neoforge:ingredient_type": "neoforge:components",
       "items": "occultism:soul_gem",
       "components": {},
       "strict": true
     },
     {
-      "type": "neoforge:components",
+      "neoforge:ingredient_type": "neoforge:components",
       "items": "minecraft:potion",
       "components": {
         "minecraft:potion_contents": {
@@ -20,32 +18,18 @@
         }
       }
     },
-    {
-      "tag": "c:storage_blocks/iesnium"
-    },
-    {
-      "item": "minecraft:furnace"
-    },
-    {
-      "tag": "c:storage_blocks/raw_iron"
-    },
-    {
-      "item": "occultism:silver_sacrificial_bowl"
-    },
-    {
-      "item": "occultism:spirit_attuned_crystal"
-    },
-    {
-      "item": "minecraft:amethyst_cluster"
-    }
+    "#c:storage_blocks/iesnium",
+    "minecraft:furnace",
+    "#c:storage_blocks/raw_iron",
+    "occultism:silver_sacrificial_bowl",
+    "occultism:spirit_attuned_crystal",
+    "minecraft:amethyst_cluster"
   ],
   "pentacle_id": "occultism:summon_marid",
   "result": {
-    "count": 1,
     "id": "occultismjars:holographic_base"
   },
   "ritual_dummy": {
-    "count": 1,
     "id": "occultismjars:ritual_dummy/craft_holographic_base"
   },
   "ritual_type": "occultism:craft"

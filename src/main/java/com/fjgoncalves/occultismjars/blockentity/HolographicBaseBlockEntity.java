@@ -2,7 +2,7 @@ package com.fjgoncalves.occultismjars.blockentity;
 
 import java.util.function.Consumer;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.fjgoncalves.occultismjars.OccultismJars;
 import com.fjgoncalves.occultismjars.content.SpiritJob;
@@ -12,14 +12,19 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.TypedEntityData;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.item.ItemStacksResourceHandler;
 
 public class HolographicBaseBlockEntity extends SpiritWorkerBlockEntity {
 
@@ -43,17 +48,28 @@ public class HolographicBaseBlockEntity extends SpiritWorkerBlockEntity {
         if (!isGem(stack)) {
             return false;
         }
-        CustomData data = stack.get(DataComponents.ENTITY_DATA);
-        if (data == null) {
+        CompoundTag tag = gemSpirit(stack);
+        if (tag == null) {
             return false;
         }
-        CompoundTag tag = data.copyTag();
         SpiritJob job = SpiritJob.of(tag);
         if (job == null) {
             return false;
         }
         int tier = job.tierOf(tag);
         return tier >= 1 && tier <= job.maxTier();
+    }
+
+    // the gem keeps the entity type apart from its data; put the "id" back so it reads like a saved entity
+    @Nullable
+    private static CompoundTag gemSpirit(ItemStack gem) {
+        TypedEntityData<EntityType<?>> data = gem.get(DataComponents.ENTITY_DATA);
+        if (data == null) {
+            return null;
+        }
+        CompoundTag tag = data.copyTagWithoutId();
+        tag.putString("id", EntityType.getKey(data.type()).toString());
+        return tag;
     }
 
     public ItemStack getGem() {
@@ -68,11 +84,11 @@ public class HolographicBaseBlockEntity extends SpiritWorkerBlockEntity {
     public void insertGem(ItemStack stack) {
         this.gem = stack.copyWithCount(1);
         this.readSpirit();
-        if (this.holdsWork() && this.inventory.getStackInSlot(INPUT_SLOT).isEmpty()) {
+        if (this.holdsWork() && this.getStack(INPUT_SLOT).isEmpty()) {
             ItemStack held = this.heldItem();
             if (!held.isEmpty()) {
                 this.setHeldItem(ItemStack.EMPTY);
-                this.inventory.setStackInSlot(INPUT_SLOT, held);
+                this.setStack(INPUT_SLOT, held);
             }
         }
         this.onSpiritChanged();
@@ -90,10 +106,10 @@ public class HolographicBaseBlockEntity extends SpiritWorkerBlockEntity {
     }
 
     private void returnInputToSpirit() {
-        ItemStack input = this.inventory.getStackInSlot(INPUT_SLOT);
+        ItemStack input = this.getStack(INPUT_SLOT);
         if (!input.isEmpty() && this.holdsWork() && this.heldItem().isEmpty()) {
             this.setHeldItem(input.copy());
-            this.inventory.setStackInSlot(INPUT_SLOT, ItemStack.EMPTY);
+            this.setStack(INPUT_SLOT, ItemStack.EMPTY);
         }
     }
 
@@ -102,37 +118,27 @@ public class HolographicBaseBlockEntity extends SpiritWorkerBlockEntity {
         return this.level != null && this.job != null && this.job != SpiritJob.PARTNER;
     }
 
-    // an Occultism spirit's main hand is slot 0 of its own "inventory", not the vanilla HandItems;
-    // HandItems is still read as a fallback so anything left there by older builds isn't lost
+    // an Occultism spirit's main hand is slot 0 of its own "inventory", not the vanilla equipment
     private ItemStack heldItem() {
-        HolderLookup.Provider registries = this.level.registryAccess();
-        ItemStack held = spiritInventory(this.spiritData, registries).getStackInSlot(0);
-        if (held.isEmpty()) {
-            ListTag hands = this.spiritData.getList("HandItems", Tag.TAG_COMPOUND);
-            held = hands.isEmpty() ? ItemStack.EMPTY : ItemStack.parseOptional(registries, hands.getCompound(0));
-        }
-        return held;
+        ItemStacksResourceHandler inventory = spiritInventory(this.spiritData, this.level.registryAccess());
+        return inventory.getResource(0).toStack(inventory.getAmountAsInt(0));
     }
 
     private void setHeldItem(ItemStack stack) {
         HolderLookup.Provider registries = this.level.registryAccess();
         this.updateSpiritData(tag -> {
-            ItemStackHandler inventory = spiritInventory(tag, registries);
-            inventory.setStackInSlot(0, stack);
-            tag.put("inventory", inventory.serializeNBT(registries));
-            ListTag hands = tag.getList("HandItems", Tag.TAG_COMPOUND);
-            if (!hands.isEmpty()) {
-                hands.set(0, new CompoundTag());
-                tag.put("HandItems", hands);
-            }
+            ItemStacksResourceHandler inventory = spiritInventory(tag, registries);
+            inventory.set(0, ItemResource.of(stack), stack.getCount());
+            TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, registries);
+            inventory.serialize(output);
+            tag.put("inventory", output.buildResult());
         });
     }
 
-    private static ItemStackHandler spiritInventory(CompoundTag spirit, HolderLookup.Provider registries) {
-        ItemStackHandler inventory = new ItemStackHandler(1);
-        if (spirit.contains("inventory")) {
-            inventory.deserializeNBT(registries, spirit.getCompound("inventory"));
-        }
+    private static ItemStacksResourceHandler spiritInventory(CompoundTag spirit, HolderLookup.Provider registries) {
+        ItemStacksResourceHandler inventory = new ItemStacksResourceHandler(1);
+        spirit.getCompound("inventory").ifPresent(tag ->
+                inventory.deserialize(TagValueInput.create(ProblemReporter.DISCARDING, registries, tag)));
         return inventory;
     }
 
@@ -140,11 +146,10 @@ public class HolographicBaseBlockEntity extends SpiritWorkerBlockEntity {
         this.spiritData = null;
         this.job = null;
         this.tier = 0;
-        CustomData data = this.gem.get(DataComponents.ENTITY_DATA);
-        if (data == null) {
+        CompoundTag tag = gemSpirit(this.gem);
+        if (tag == null) {
             return;
         }
-        CompoundTag tag = data.copyTag();
         SpiritJob found = SpiritJob.of(tag);
         if (found == null) {
             return;
@@ -157,10 +162,13 @@ public class HolographicBaseBlockEntity extends SpiritWorkerBlockEntity {
     // the partner's heart cooldown lives in its own data, so it follows the gem around
     @Override
     protected void updateSpiritData(Consumer<CompoundTag> edit) {
-        if (this.gem.isEmpty()) {
+        TypedEntityData<EntityType<?>> data = this.gem.get(DataComponents.ENTITY_DATA);
+        if (data == null) {
             return;
         }
-        CustomData.update(DataComponents.ENTITY_DATA, this.gem, edit);
+        CompoundTag tag = data.copyTagWithoutId();
+        edit.accept(tag);
+        this.gem.set(DataComponents.ENTITY_DATA, TypedEntityData.of(data.type(), tag));
         this.readSpirit();
         this.setChanged();
     }
@@ -191,7 +199,7 @@ public class HolographicBaseBlockEntity extends SpiritWorkerBlockEntity {
     @Override
     public Component getDisplayName() {
         return this.spiritData != null && this.job != null
-                ? this.job.describe(this.spiritData.getString("id"), SpiritJob.factoryIdOf(this.spiritData))
+                ? this.job.describe(this.spiritData.getStringOr("id", ""), SpiritJob.factoryIdOf(this.spiritData))
                 : this.getBlockName();
     }
 
@@ -206,17 +214,22 @@ public class HolographicBaseBlockEntity extends SpiritWorkerBlockEntity {
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        this.gem = tag.contains("gem") ? ItemStack.parseOptional(registries, tag.getCompound("gem")) : ItemStack.EMPTY;
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        this.dropContents();
+    }
+
+    @Override
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        this.gem = input.read("gem", ItemStack.CODEC).orElse(ItemStack.EMPTY);
         this.readSpirit();
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
         if (!this.gem.isEmpty()) {
-            tag.put("gem", this.gem.save(registries));
+            output.store("gem", ItemStack.CODEC, this.gem);
         }
     }
 }

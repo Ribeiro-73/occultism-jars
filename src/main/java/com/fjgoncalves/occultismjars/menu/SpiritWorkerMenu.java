@@ -14,8 +14,8 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.SlotItemHandler;
+import net.neoforged.neoforge.transfer.item.ItemStacksResourceHandler;
+import net.neoforged.neoforge.transfer.item.ResourceHandlerSlot;
 
 public class SpiritWorkerMenu extends AbstractContainerMenu {
 
@@ -37,20 +37,20 @@ public class SpiritWorkerMenu extends AbstractContainerMenu {
         this.pos = worker.getBlockPos();
         this.data = data;
 
-        IItemHandler inv = worker.getInventory();
-        this.addSlot(new SlotItemHandler(inv, SpiritWorkerBlockEntity.INPUT_SLOT, 134, 26) {
+        ItemStacksResourceHandler inv = worker.getInventory();
+        this.addSlot(new ResourceHandlerSlot(inv, inv::set, SpiritWorkerBlockEntity.INPUT_SLOT, 134, 26) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return worker.canProcess(stack);
             }
         });
-        this.addSlot(new SlotItemHandler(inv, SpiritWorkerBlockEntity.FIRST_OUTPUT_SLOT, 134, 54) {
+        this.addSlot(new ResourceHandlerSlot(inv, inv::set, SpiritWorkerBlockEntity.FIRST_OUTPUT_SLOT, 134, 54) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return false;
             }
         });
-        this.addSlot(new SlotItemHandler(inv, SpiritWorkerBlockEntity.FIRST_OUTPUT_SLOT + 1, 152, 54) {
+        this.addSlot(new ResourceHandlerSlot(inv, inv::set, SpiritWorkerBlockEntity.FIRST_OUTPUT_SLOT + 1, 152, 54) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return false;

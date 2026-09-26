@@ -2,7 +2,7 @@ package com.fjgoncalves.occultismjars.content;
 
 import java.util.List;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -68,7 +68,7 @@ public enum SpiritJob {
 
     // the job id Occultism keeps in a spirit's saved data, "" if there is none
     public static String factoryIdOf(CompoundTag entityData) {
-        return entityData.getCompound("spiritJob").getString("factoryId");
+        return entityData.getCompoundOrEmpty("spiritJob").getStringOr("factoryId", "");
     }
 
     public static SpiritJob byName(String name) {
@@ -99,7 +99,7 @@ public enum SpiritJob {
         if (job != null) {
             return job;
         }
-        String entityId = entityData.getString("id");
+        String entityId = entityData.getStringOr("id", "");
         for (SpiritJob candidate : values()) {
             if (candidate.entityIds.contains(entityId)) {
                 return candidate;
@@ -122,7 +122,7 @@ public enum SpiritJob {
 
     public int tierOf(CompoundTag entityData) {
         if (!this.entityIds.isEmpty()) {
-            return this.entityIds.contains(entityData.getString("id")) ? 1 : 0;
+            return this.entityIds.contains(entityData.getStringOr("id", "")) ? 1 : 0;
         }
         return this.tierOf(factoryIdOf(entityData));
     }

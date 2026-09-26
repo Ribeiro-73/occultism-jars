@@ -1,6 +1,6 @@
 package com.fjgoncalves.occultismjars.content;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 public enum SpiritType {
     FOLIOT("foliot", 1),
@@ -24,11 +24,11 @@ public enum SpiritType {
         return this.tier;
     }
 
-    public ResourceLocation entityId() {
-        return ResourceLocation.fromNamespaceAndPath("occultism", this.spirit);
+    public Identifier entityId() {
+        return Identifier.fromNamespaceAndPath("occultism", this.spirit);
     }
 
-    public static SpiritType byEntityId(ResourceLocation id) {
+    public static SpiritType byEntityId(Identifier id) {
         if (id == null || !id.getNamespace().equals("occultism")) {
             return null;
         }

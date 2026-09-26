@@ -16,13 +16,13 @@ public final class ModEvents {
     @SubscribeEvent
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(
-                Capabilities.ItemHandler.BLOCK,
+                Capabilities.Item.BLOCK,
                 OccultismJars.SPIRIT_JAR_BE.get(),
                 (jar, side) -> jar.getAutomationView());
 
         // both halves of the base expose the lower half's inventory, so pipes can connect anywhere
         event.registerBlock(
-                Capabilities.ItemHandler.BLOCK,
+                Capabilities.Item.BLOCK,
                 (level, pos, state, be, side) -> {
                     var lower = state.getValue(HolographicBaseBlock.HALF) == DoubleBlockHalf.UPPER ? pos.below() : pos;
                     return level.getBlockEntity(lower) instanceof HolographicBaseBlockEntity base
@@ -31,7 +31,7 @@ public final class ModEvents {
                 OccultismJars.HOLOGRAPHIC_BASE.get());
 
         event.registerBlockEntity(
-                Capabilities.ItemHandler.BLOCK,
+                Capabilities.Item.BLOCK,
                 OccultismJars.SPIRIT_FIRE_CHAMBER_BE.get(),
                 (chamber, side) -> chamber.getAutomationView());
     }

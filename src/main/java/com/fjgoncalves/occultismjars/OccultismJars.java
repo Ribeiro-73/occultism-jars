@@ -17,10 +17,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -45,14 +45,15 @@ public final class OccultismJars {
     public static final DeferredBlock<SpiritJarBlock> SPIRIT_JAR = BLOCKS.registerBlock(
             "spirit_jar",
             SpiritJarBlock::new,
-            BlockBehaviour.Properties.of()
+            props -> props
                     .mapColor(MapColor.COLOR_PURPLE)
                     .strength(1.5F)
                     .sound(SoundType.GLASS)
                     .noOcclusion());
 
     public static final DeferredItem<SpiritJarItem> SPIRIT_JAR_ITEM =
-            ITEMS.registerItem("spirit_jar", props -> new SpiritJarItem(SPIRIT_JAR.get(), props));
+            ITEMS.registerItem("spirit_jar", props -> new SpiritJarItem(SPIRIT_JAR.get(), props),
+                    Item.Properties::useBlockDescriptionPrefix);
 
     public static final DeferredItem<DummyTooltipItem> RITUAL_DUMMY_CRAFT_SPIRIT_JAR =
             ITEMS.registerItem("ritual_dummy/craft_spirit_jar", DummyTooltipItem::new);
@@ -60,14 +61,15 @@ public final class OccultismJars {
     public static final DeferredBlock<HolographicBaseBlock> HOLOGRAPHIC_BASE = BLOCKS.registerBlock(
             "holographic_base",
             HolographicBaseBlock::new,
-            BlockBehaviour.Properties.of()
+            props -> props
                     .mapColor(MapColor.COLOR_PURPLE)
                     .strength(3.0F)
                     .sound(SoundType.METAL)
                     .noOcclusion());
 
     public static final DeferredItem<HolographicBaseItem> HOLOGRAPHIC_BASE_ITEM =
-            ITEMS.registerItem("holographic_base", props -> new HolographicBaseItem(HOLOGRAPHIC_BASE.get(), props));
+            ITEMS.registerItem("holographic_base", props -> new HolographicBaseItem(HOLOGRAPHIC_BASE.get(), props),
+                    Item.Properties::useBlockDescriptionPrefix);
 
     public static final DeferredItem<DummyTooltipItem> RITUAL_DUMMY_CRAFT_HOLOGRAPHIC_BASE =
             ITEMS.registerItem("ritual_dummy/craft_holographic_base", DummyTooltipItem::new);
@@ -75,7 +77,7 @@ public final class OccultismJars {
     public static final DeferredBlock<SpiritFireChamberBlock> SPIRIT_FIRE_CHAMBER = BLOCKS.registerBlock(
             "spirit_fire_chamber",
             SpiritFireChamberBlock::new,
-            BlockBehaviour.Properties.of()
+            props -> props
                     .mapColor(MapColor.COLOR_PURPLE)
                     .strength(1.5F)
                     .sound(SoundType.GLASS)
@@ -83,7 +85,8 @@ public final class OccultismJars {
                     .lightLevel(state -> SpiritFireChamberBlock.isLit(state) ? 12 : 0));
 
     public static final DeferredItem<SpiritFireChamberItem> SPIRIT_FIRE_CHAMBER_ITEM =
-            ITEMS.registerItem("spirit_fire_chamber", props -> new SpiritFireChamberItem(SPIRIT_FIRE_CHAMBER.get(), props));
+            ITEMS.registerItem("spirit_fire_chamber", props -> new SpiritFireChamberItem(SPIRIT_FIRE_CHAMBER.get(), props),
+                    Item.Properties::useBlockDescriptionPrefix);
 
     public static final DeferredItem<DummyTooltipItem> RITUAL_DUMMY_CRAFT_SPIRIT_FIRE_CHAMBER =
             ITEMS.registerItem("ritual_dummy/craft_spirit_fire_chamber", DummyTooltipItem::new);
@@ -93,15 +96,15 @@ public final class OccultismJars {
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SpiritJarBlockEntity>> SPIRIT_JAR_BE =
             BLOCK_ENTITIES.register("spirit_jar",
-                    () -> BlockEntityType.Builder.of(SpiritJarBlockEntity::new, SPIRIT_JAR.get()).build(null));
+                    () -> new BlockEntityType<>(SpiritJarBlockEntity::new, SPIRIT_JAR.get()));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<HolographicBaseBlockEntity>> HOLOGRAPHIC_BASE_BE =
             BLOCK_ENTITIES.register("holographic_base",
-                    () -> BlockEntityType.Builder.of(HolographicBaseBlockEntity::new, HOLOGRAPHIC_BASE.get()).build(null));
+                    () -> new BlockEntityType<>(HolographicBaseBlockEntity::new, HOLOGRAPHIC_BASE.get()));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<SpiritFireChamberBlockEntity>> SPIRIT_FIRE_CHAMBER_BE =
             BLOCK_ENTITIES.register("spirit_fire_chamber",
-                    () -> BlockEntityType.Builder.of(SpiritFireChamberBlockEntity::new, SPIRIT_FIRE_CHAMBER.get()).build(null));
+                    () -> new BlockEntityType<>(SpiritFireChamberBlockEntity::new, SPIRIT_FIRE_CHAMBER.get()));
 
     public static final DeferredRegister<MenuType<?>> MENUS =
             DeferredRegister.create(Registries.MENU, MODID);

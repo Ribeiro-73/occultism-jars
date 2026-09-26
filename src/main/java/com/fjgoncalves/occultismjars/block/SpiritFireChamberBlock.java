@@ -2,7 +2,7 @@ package com.fjgoncalves.occultismjars.block;
 
 import java.util.Map;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.fjgoncalves.occultismjars.blockentity.SpiritFireChamberBlockEntity;
 import com.klikli_dev.occultism.api.common.data.ColorBlockState;
@@ -16,8 +16,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.ItemInteractionResult;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -59,41 +57,41 @@ public class SpiritFireChamberBlock extends Block implements EntityBlock {
 
     // lit like the real thing: datura first, then a flint and steel (or anything else that lights fires)
     @Override
-    protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player,
+    protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos, Player player,
             InteractionHand hand, BlockHitResult hit) {
         Stage stage = state.getValue(STAGE);
 
         if (stage == Stage.EMPTY && stack.is(OccultismTags.Items.START_SPIRIT_FIRE)) {
-            if (!level.isClientSide) {
+            if (!level.isClientSide()) {
                 level.setBlockAndUpdate(pos, state.setValue(STAGE, Stage.DATURA));
                 stack.consume(1, player);
                 level.playSound(null, pos, SoundEvents.CROP_PLANTED, SoundSource.BLOCKS, 1.0F, 1.0F);
             }
-            return ItemInteractionResult.sidedSuccess(level.isClientSide);
+            return InteractionResult.SUCCESS;
         }
 
         if (stage == Stage.DATURA && stack.canPerformAction(ItemAbilities.FIRESTARTER_LIGHT)) {
-            if (!level.isClientSide) {
+            if (!level.isClientSide()) {
                 level.setBlockAndUpdate(pos, state.setValue(STAGE, Stage.LIT));
                 if (stack.isDamageableItem()) {
-                    stack.hurtAndBreak(1, player, LivingEntity.getSlotForHand(hand));
+                    stack.hurtAndBreak(1, player, hand);
                     level.playSound(null, pos, SoundEvents.FLINTANDSTEEL_USE, SoundSource.BLOCKS, 1.0F, 1.0F);
                 } else {
                     stack.consume(1, player);
                     level.playSound(null, pos, SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 1.0F, 1.0F);
                 }
             }
-            return ItemInteractionResult.sidedSuccess(level.isClientSide);
+            return InteractionResult.SUCCESS;
         }
 
         ColorBlockState color = stage == Stage.LIT ? chalkColor(stack) : null;
         if (color != null && color != state.getValue(COLOR)) {
-            if (!level.isClientSide) {
+            if (!level.isClientSide()) {
                 level.setBlockAndUpdate(pos, state.setValue(COLOR, color));
             }
-            return ItemInteractionResult.sidedSuccess(level.isClientSide);
+            return InteractionResult.SUCCESS;
         }
-        return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
+        return InteractionResult.TRY_WITH_EMPTY_HAND;
     }
 
     // changed your mind before lighting it: shift + right-click takes the datura back
@@ -102,11 +100,11 @@ public class SpiritFireChamberBlock extends Block implements EntityBlock {
         if (!player.isSecondaryUseActive() || state.getValue(STAGE) != Stage.DATURA) {
             return InteractionResult.PASS;
         }
-        if (!level.isClientSide) {
+        if (!level.isClientSide()) {
             level.setBlockAndUpdate(pos, state.setValue(STAGE, Stage.EMPTY));
             player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(OccultismItems.DATURA.get()));
         }
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        return InteractionResult.SUCCESS;
     }
 
     // the same chalks the spirit fire reacts to
@@ -142,13 +140,6 @@ public class SpiritFireChamberBlock extends Block implements EntityBlock {
         return new SpiritFireChamberBlockEntity(pos, state);
     }
 
-    @Override
-    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
-        if (!state.is(newState.getBlock()) && level.getBlockEntity(pos) instanceof SpiritFireChamberBlockEntity chamber) {
-            chamber.dropContents();
-        }
-        super.onRemove(state, level, pos, newState, movedByPiston);
-    }
 
     public enum Stage implements StringRepresentable {
         EMPTY("empty"),

@@ -1,5 +1,7 @@
 package com.fjgoncalves.occultismjars.event;
 
+import org.jspecify.annotations.Nullable;
+
 import com.fjgoncalves.occultismjars.ModComponents;
 import com.fjgoncalves.occultismjars.OccultismJars;
 import com.fjgoncalves.occultismjars.content.SpiritJob;
@@ -8,15 +10,18 @@ import com.fjgoncalves.occultismjars.item.SpiritJarItem;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.TagValueOutput;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -29,7 +34,7 @@ public final class CaptureHandler {
     public static void onEntityInteract(PlayerInteractEvent.EntityInteract event) {
         if (tryCapture(event.getEntity(), event.getItemStack(), event.getTarget())) {
             event.setCanceled(true);
-            event.setCancellationResult(InteractionResult.sidedSuccess(event.getLevel().isClientSide()));
+            event.setCancellationResult(InteractionResult.SUCCESS);
         }
     }
 
@@ -37,7 +42,7 @@ public final class CaptureHandler {
     public static void onEntityInteractSpecific(PlayerInteractEvent.EntityInteractSpecific event) {
         if (tryCapture(event.getEntity(), event.getItemStack(), event.getTarget())) {
             event.setCanceled(true);
-            event.setCancellationResult(InteractionResult.sidedSuccess(event.getLevel().isClientSide()));
+            event.setCancellationResult(InteractionResult.SUCCESS);
         }
     }
 
@@ -46,7 +51,7 @@ public final class CaptureHandler {
             return false;
         }
 
-        ResourceLocation entityId = BuiltInRegistries.ENTITY_TYPE.getKey(target.getType());
+        Identifier entityId = BuiltInRegistries.ENTITY_TYPE.getKey(target.getType());
         SpiritType type = SpiritType.byEntityId(entityId);
         if (type == null) {
             return false;
@@ -57,11 +62,11 @@ public final class CaptureHandler {
             return false;
         }
 
-        CompoundTag probe = new CompoundTag();
-        if (!target.save(probe)) {
+        CompoundTag probe = saveEntity(target);
+        if (probe == null) {
             return false;
         }
-        String factoryId = probe.getCompound("spiritJob").getString("factoryId");
+        String factoryId = SpiritJob.factoryIdOf(probe);
         SpiritJob job = SpiritJob.byFactoryId(factoryId);
         if (job == null) {
             return false;
@@ -72,7 +77,7 @@ public final class CaptureHandler {
         }
         if (tier > job.jarMaxTier()) {
             String message = job.jarMaxTier() == 0 ? "message.occultismjars.base_only" : "message.occultismjars.too_strong";
-            player.displayClientMessage(Component.translatable(message), true);
+            player.sendOverlayMessage(Component.translatable(message));
             return true;
         }
 
@@ -85,8 +90,8 @@ public final class CaptureHandler {
             }
         }
 
-        CompoundTag entityData = new CompoundTag();
-        if (!target.save(entityData)) {
+        CompoundTag entityData = saveEntity(target);
+        if (entityData == null) {
             return false;
         }
 
@@ -96,7 +101,7 @@ public final class CaptureHandler {
         stored.putString("entity", entityId.toString());
         stored.put("data", entityData);
         if (!held.isEmpty()) {
-            stored.put("heldItem", held.save(player.level().registryAccess()));
+            stored.store("heldItem", ItemStack.CODEC, player.registryAccess().createSerializationContext(NbtOps.INSTANCE), held);
         }
 
         ItemStack filled = stack.copyWithCount(1);
@@ -109,5 +114,12 @@ public final class CaptureHandler {
         target.discard();
         target.playSound(SoundEvents.BOTTLE_FILL, 1.0F, 1.0F);
         return true;
+    }
+
+    // the whole entity as it would be saved to disk, with its "id"
+    @Nullable
+    private static CompoundTag saveEntity(Entity entity) {
+        TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, entity.registryAccess());
+        return entity.save(output) ? output.buildResult() : null;
     }
 }

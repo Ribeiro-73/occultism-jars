@@ -2,9 +2,10 @@ package com.fjgoncalves.occultismjars.blockentity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import com.fjgoncalves.occultismjars.Config;
 import com.fjgoncalves.occultismjars.content.SpiritJob;
@@ -21,31 +22,36 @@ import com.klikli_dev.occultism.registry.OccultismSounds;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.random.WeightedRandom;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.food.Foods;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.food.Foods;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.component.SuspiciousStewEffects;
@@ -61,8 +67,14 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.item.ItemStacksResourceHandler;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
+import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 
 // shared by the jar and the holographic base: inventory, automation, the spirit's job, menu
 public abstract class SpiritWorkerBlockEntity extends BlockEntity implements MenuProvider {
@@ -99,15 +111,15 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
         }
     };
 
-    protected final ItemStackHandler inventory = new ItemStackHandler(SLOT_COUNT) {
+    protected final ItemStacksResourceHandler inventory = new ItemStacksResourceHandler(SLOT_COUNT) {
         @Override
-        protected void onContentsChanged(int slot) {
+        protected void onContentsChanged(int index, ItemStack previousContents) {
             setChanged();
         }
     };
 
     // what hoppers/pipes see: insert into input, extract from outputs
-    private final IItemHandler automationView = new AutomationView();
+    private final ResourceHandler<ItemResource> automationView = new AutomationView();
 
     // client-only caches for the renderers
     private Entity displayEntity;
@@ -140,12 +152,20 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
         return this.getSpiritData() != null;
     }
 
-    public IItemHandler getAutomationView() {
+    public ResourceHandler<ItemResource> getAutomationView() {
         return this.automationView;
     }
 
-    public IItemHandler getInventory() {
+    public ItemStacksResourceHandler getInventory() {
         return this.inventory;
+    }
+
+    public ItemStack getStack(int slot) {
+        return this.inventory.getResource(slot).toStack(this.inventory.getAmountAsInt(slot));
+    }
+
+    public void setStack(int slot, ItemStack stack) {
+        this.inventory.set(slot, ItemResource.of(stack), stack.getCount());
     }
 
     public ContainerData getDataAccess() {
@@ -181,8 +201,8 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
     }
 
     public ItemStack takeInput() {
-        ItemStack input = this.inventory.getStackInSlot(INPUT_SLOT);
-        this.inventory.setStackInSlot(INPUT_SLOT, ItemStack.EMPTY);
+        ItemStack input = this.getStack(INPUT_SLOT);
+        this.setStack(INPUT_SLOT, ItemStack.EMPTY);
         return input;
     }
 
@@ -190,13 +210,18 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
         if (this.level == null) {
             return;
         }
-        for (int slot = 0; slot < this.inventory.getSlots(); slot++) {
-            ItemStack stack = this.inventory.getStackInSlot(slot);
+        for (int slot = 0; slot < SLOT_COUNT; slot++) {
+            ItemStack stack = this.getStack(slot);
             if (!stack.isEmpty()) {
                 Block.popResource(this.level, this.worldPosition, stack);
-                this.inventory.setStackInSlot(slot, ItemStack.EMPTY);
+                this.setStack(slot, ItemStack.EMPTY);
             }
         }
+    }
+
+    @Override
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        this.dropInventory();
     }
 
     @Override
@@ -207,7 +232,8 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
         if (data == null || job == null) {
             return name;
         }
-        return Component.translatable("container.occultismjars.spirit_worker", name, job.describe(data.getString("id"), SpiritJob.factoryIdOf(data)));
+        return Component.translatable("container.occultismjars.spirit_worker", name,
+                job.describe(data.getStringOr("id", ""), SpiritJob.factoryIdOf(data)));
     }
 
     @Nullable
@@ -217,7 +243,7 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, SpiritWorkerBlockEntity worker) {
-        ItemStack input = worker.inventory.getStackInSlot(INPUT_SLOT);
+        ItemStack input = worker.getStack(INPUT_SLOT);
         Work work = input.isEmpty() ? null : worker.findWork(input);
         if (work == null || work.waiting() || work.result().isEmpty() || !worker.canFitInOutput(work.result())) {
             worker.stopProgress();
@@ -241,7 +267,9 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
             if (work.onFinish() != null) {
                 work.onFinish().run();
             }
-            worker.inventory.extractItem(INPUT_SLOT, work.consumed(), false);
+            ItemStack remaining = worker.getStack(INPUT_SLOT);
+            remaining.shrink(work.consumed());
+            worker.setStack(INPUT_SLOT, remaining);
             worker.pushToOutput(produced);
             worker.setChanged();
             playWorkSound(level, pos, worker.getJob(), true);
@@ -261,7 +289,7 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
             if (this.rolls == null) {
                 return this.result.copy();
             }
-            return WeightedRandom.getRandomItem(random, this.rolls)
+            return WeightedRandom.getRandomItem(random, this.rolls, WeightedRecipeResult::weight)
                     .map(roll -> roll.getStack().copyWithCount(roll.getStack().getCount() * this.consumed))
                     .orElse(ItemStack.EMPTY);
         }
@@ -277,27 +305,30 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
         int tier = Mth.clamp(this.getTier(), 1, 4);
         var jobs = Occultism.SERVER_CONFIG.spiritJobs;
         float jarTime = Config.JAR_TIME_MULTIPLIER.get().floatValue();
-        var registries = this.level.registryAccess();
 
         switch (job) {
             case CRUSHER -> {
                 var settings = pick(tier, jobs.crusherFoliot, jobs.crusherDjinni, jobs.crusherAfrit, jobs.crusherMarid);
-                if (!(this.recipeFor(job, input, settings.tier.get()) instanceof RecipeHolder<?> holder)
+                int recipeTier = settings.tier.get();
+                if (!(this.recipeFor(job, input, recipeTier) instanceof RecipeHolder<?> holder)
                         || !(holder.value() instanceof CrushingRecipe recipe)) {
                     return null;
                 }
                 float output = recipe.getIgnoreCrushingMultiplier() ? 1.0F : settings.outputMultiplier.get().floatValue();
-                return work(recipe.getResultItem(registries), input, settings.operationCount.get(), output,
+                return work(recipe.assemble(new TieredSingleRecipeInput(input, recipeTier)), input,
+                        settings.operationCount.get(), output,
                         recipe.getCrushingTime() * settings.timeMultiplier.get().floatValue() * jarTime);
             }
             case CRYSTALLIZER -> {
                 var settings = pick(tier, jobs.crystallizerFoliot, jobs.crystallizerDjinni, jobs.crystallizerAfrit, jobs.crystallizerMarid);
-                if (!(this.recipeFor(job, input, settings.tier.get()) instanceof RecipeHolder<?> holder)
+                int recipeTier = settings.tier.get();
+                if (!(this.recipeFor(job, input, recipeTier) instanceof RecipeHolder<?> holder)
                         || !(holder.value() instanceof CrystallizeRecipe recipe)) {
                     return null;
                 }
                 float output = recipe.getIgnoreCrystallizeMultiplier() ? 1.0F : settings.outputMultiplier.get().floatValue();
-                return work(recipe.getResultItem(registries), input, settings.operationCount.get(), output,
+                return work(recipe.assemble(new TieredSingleRecipeInput(input, recipeTier)), input,
+                        settings.operationCount.get(), output,
                         recipe.getCrystallizeTime() * settings.timeMultiplier.get().floatValue() * jarTime);
             }
             case SMELTER -> {
@@ -306,8 +337,8 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
                         || !(holder.value() instanceof AbstractCookingRecipe recipe)) {
                     return null;
                 }
-                return work(recipe.getResultItem(registries), input, settings.operationCount.get(), 1.0F,
-                        recipe.getCookingTime() * settings.timeMultiplier.get().floatValue() * jarTime);
+                return work(recipe.assemble(new SingleRecipeInput(input)), input, settings.operationCount.get(), 1.0F,
+                        recipe.cookingTime() * settings.timeMultiplier.get().floatValue() * jarTime);
             }
             case TRADER -> {
                 var settings = switch (this.getFactoryId()) {
@@ -348,10 +379,9 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
             if (effects.isEmpty()) {
                 return null;
             }
-            ItemStack container = input.getCraftingRemainingItem();
-            if (container.isEmpty()) {
-                container = new ItemStack(stew ? Items.BOWL : Items.GLASS_BOTTLE);
-            }
+            ItemStackTemplate remainder = input.getCraftingRemainder();
+            ItemStack container = remainder != null ? remainder.create()
+                    : new ItemStack(stew ? Items.BOWL : Items.GLASS_BOTTLE);
             ServerPlayer owner = this.partnerOwner(data);
             // keep the effect up without burning potions: wait until it's about to run out
             boolean waiting = owner == null || effects.stream().allMatch(effect -> stillActive(owner, effect));
@@ -371,7 +401,7 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
         // cursed honey becomes a sweet honey heart, with the partner's own cooldown
         if (input.is(OccultismItems.CURSED_HONEY.get())) {
             long now = this.level.getGameTime();
-            boolean waiting = data.getLong("heartLastTime") + HEART_COOLDOWN > now;
+            boolean waiting = data.getLongOr("heartLastTime", 0L) + HEART_COOLDOWN > now;
             return new Work(new ItemStack(OccultismItems.SWEET_HONEY_HEART.get()), PARTNER_TIME, 1, null, waiting,
                     () -> this.updateSpiritData(tag -> tag.putLong("heartLastTime", now)));
         }
@@ -379,7 +409,7 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
         // raw food gets cooked, like the smoker
         if (this.recipeFor(SpiritJob.PARTNER, input, 0) instanceof RecipeHolder<?> holder
                 && holder.value() instanceof SmokingRecipe recipe) {
-            return new Work(recipe.getResultItem(this.level.registryAccess()).copy(), PARTNER_TIME, 1, null);
+            return new Work(recipe.assemble(new SingleRecipeInput(input)), PARTNER_TIME, 1, null);
         }
         return null;
     }
@@ -414,10 +444,11 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
     // the owner, wherever they are on the server, or null when offline
     @Nullable
     private ServerPlayer partnerOwner(CompoundTag data) {
-        if (this.level == null || this.level.getServer() == null || !data.hasUUID("Owner")) {
+        if (this.level == null || this.level.getServer() == null) {
             return null;
         }
-        return this.level.getServer().getPlayerList().getPlayer(data.getUUID("Owner"));
+        UUID owner = data.read("Owner", UUIDUtil.CODEC).orElse(null);
+        return owner == null ? null : this.level.getServer().getPlayerList().getPlayer(owner);
     }
 
     // lets a job change the stored spirit (only the base can, its spirit lives in a gem)
@@ -453,7 +484,7 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
                 && ItemStack.isSameItemSameComponents(this.cachedInput, input)) {
             return this.cachedRecipe;
         }
-        Object found = this.lookupRecipe(job, input, recipeTier);
+        Object found = this.level instanceof ServerLevel server ? this.lookupRecipe(server, job, input, recipeTier) : null;
         this.cachedVersion = this.spiritVersion;
         this.cachedTier = recipeTier;
         this.cachedInput = input.copyWithCount(1);
@@ -462,35 +493,39 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
     }
 
     @Nullable
-    private Object lookupRecipe(SpiritJob job, ItemStack input, int recipeTier) {
-        RecipeManager recipes = this.level.getRecipeManager();
+    private Object lookupRecipe(ServerLevel level, SpiritJob job, ItemStack input, int recipeTier) {
+        RecipeManager recipes = level.recipeAccess();
         return switch (job) {
             // every trade this trader has for the item, like the spirit does
-            case TRADER -> recipes.getRecipesFor(OccultismRecipes.SPIRIT_TRADE_TYPE.get(),
-                            new TraderRecipeInput(input, this.getFactoryId()), this.level).stream()
-                    .map(holder -> holder.value().getWeightedResult())
-                    .toList();
+            case TRADER -> {
+                String trader = this.getFactoryId();
+                yield recipes.recipeMap().getRecipesFor(OccultismRecipes.SPIRIT_TRADE_TYPE.get(),
+                                new TraderRecipeInput(input, trader), level)
+                        .filter(holder -> holder.value().getTrader() == null || holder.value().getTrader().equals(trader))
+                        .map(holder -> holder.value().getWeightedResult())
+                        .toList();
+            }
             case CRUSHER -> recipes.getRecipeFor(OccultismRecipes.CRUSHING_TYPE.get(),
-                    new TieredSingleRecipeInput(input, recipeTier), this.level).orElse(null);
+                    new TieredSingleRecipeInput(input, recipeTier), level).orElse(null);
             case CRYSTALLIZER -> recipes.getRecipeFor(OccultismRecipes.CRYSTALLIZE_TYPE.get(),
-                    new TieredSingleRecipeInput(input, recipeTier), this.level).orElse(null);
+                    new TieredSingleRecipeInput(input, recipeTier), level).orElse(null);
             // furnace first, then the other cookers, like the smelter spirit
             case SMELTER -> {
                 SingleRecipeInput single = new SingleRecipeInput(input);
-                RecipeHolder<?> found = recipes.getRecipeFor(RecipeType.SMELTING, single, this.level).orElse(null);
+                RecipeHolder<?> found = recipes.getRecipeFor(RecipeType.SMELTING, single, level).orElse(null);
                 if (found == null) {
-                    found = recipes.getRecipeFor(RecipeType.BLASTING, single, this.level).orElse(null);
+                    found = recipes.getRecipeFor(RecipeType.BLASTING, single, level).orElse(null);
                 }
                 if (found == null) {
-                    found = recipes.getRecipeFor(RecipeType.SMOKING, single, this.level).orElse(null);
+                    found = recipes.getRecipeFor(RecipeType.SMOKING, single, level).orElse(null);
                 }
                 if (found == null) {
-                    found = recipes.getRecipeFor(RecipeType.CAMPFIRE_COOKING, single, this.level).orElse(null);
+                    found = recipes.getRecipeFor(RecipeType.CAMPFIRE_COOKING, single, level).orElse(null);
                 }
                 yield found;
             }
             // the partner cooks food with smoker recipes
-            case PARTNER -> recipes.getRecipeFor(RecipeType.SMOKING, new SingleRecipeInput(input), this.level).orElse(null);
+            case PARTNER -> recipes.getRecipeFor(RecipeType.SMOKING, new SingleRecipeInput(input), level).orElse(null);
         };
     }
 
@@ -507,29 +542,55 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
             case TRADER -> OccultismSounds.START_RITUAL.get();
             case PARTNER -> SoundEvents.BREWING_STAND_BREW;
         };
-        level.playSound(null, pos, sound, SoundSource.BLOCKS, 1.0F, 1.0F + 0.5F * level.random.nextFloat());
+        level.playSound(null, pos, sound, SoundSource.BLOCKS, 1.0F, 1.0F + 0.5F * level.getRandom().nextFloat());
     }
 
     private boolean canFitInOutput(ItemStack stack) {
-        for (int slot = FIRST_OUTPUT_SLOT; slot < SLOT_COUNT; slot++) {
-            ItemStack remainder = this.inventory.insertItem(slot, stack, true);
-            if (remainder.isEmpty()) {
-                return true;
-            }
+        if (stack.isEmpty()) {
+            return true;
         }
-        return false;
+        try (Transaction transaction = Transaction.openRoot()) {
+            return this.insertOutput(stack, transaction) == stack.getCount();
+        }
     }
 
     private void pushToOutput(ItemStack stack) {
-        for (int slot = FIRST_OUTPUT_SLOT; slot < SLOT_COUNT && !stack.isEmpty(); slot++) {
-            stack = this.inventory.insertItem(slot, stack, false);
+        if (stack.isEmpty()) {
+            return;
+        }
+        try (Transaction transaction = Transaction.openRoot()) {
+            this.insertOutput(stack, transaction);
+            transaction.commit();
         }
     }
 
-    // can the spirit inside do its job on this item at its tier
+    private int insertOutput(ItemStack stack, TransactionContext transaction) {
+        ItemResource resource = ItemResource.of(stack);
+        int inserted = 0;
+        for (int slot = FIRST_OUTPUT_SLOT; slot < SLOT_COUNT && inserted < stack.getCount(); slot++) {
+            inserted += this.inventory.insert(slot, resource, stack.getCount() - inserted, transaction);
+        }
+        return inserted;
+    }
+
+    // can the spirit inside do its job on this item at its tier; the client can't see recipes, so it lets
+    // things through and the server has the last word
     public boolean canProcess(ItemStack stack) {
+        if (this.level != null && !(this.level instanceof ServerLevel)) {
+            return this.hasSpirit();
+        }
         Work work = this.findWork(stack);
         return work != null && !work.result().isEmpty();
+    }
+
+    @Nullable
+    public static Entity createEntity(CompoundTag data, Level level) {
+        try {
+            return EntityType.create(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), data),
+                    level, EntitySpawnReason.LOAD).orElse(null);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Nullable
@@ -539,16 +600,12 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
             this.displayEntity = null;
             return null;
         }
-        if (this.level == null || !this.level.isClientSide || !Config.RENDER_TRAPPED_SPIRIT.get()) {
+        if (this.level == null || !this.level.isClientSide() || !Config.RENDER_TRAPPED_SPIRIT.get()) {
             return null;
         }
         if (this.displayEntity == null || this.displayDirty) {
             this.displayDirty = false;
-            try {
-                this.displayEntity = EntityType.create(data, this.level).orElse(null);
-            } catch (Exception e) {
-                this.displayEntity = null;
-            }
+            this.displayEntity = createEntity(data, this.level);
             if (this.displayEntity != null) {
                 this.displayEntity.setNoGravity(true);
                 this.displayEntity.setCustomName(null);
@@ -556,6 +613,7 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
                 float yaw = state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)
                         ? state.getValue(BlockStateProperties.HORIZONTAL_FACING).toYRot() : 0.0F;
                 this.displayEntity.setYRot(yaw);
+                this.displayEntity.yRotO = yaw;
                 if (this.displayEntity instanceof LivingEntity living) {
                     living.yBodyRot = yaw;
                     living.yBodyRotO = yaw;
@@ -569,23 +627,21 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        this.progress = tag.getInt("progress");
-        if (tag.contains("inventory")) {
-            this.inventory.deserializeNBT(registries, tag.getCompound("inventory"));
-        }
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        this.progress = input.getIntOr("progress", 0);
+        input.child("inventory").ifPresent(this.inventory::deserialize);
         this.displayDirty = true;
         this.spiritVersion++;
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
         // empty update packets get dropped, so always write something
-        tag.putBoolean("hasSpirit", this.hasSpirit());
-        tag.putInt("progress", this.progress);
-        tag.put("inventory", this.inventory.serializeNBT(registries));
+        output.putBoolean("hasSpirit", this.hasSpirit());
+        output.putInt("progress", this.progress);
+        this.inventory.serialize(output.child("inventory"));
     }
 
     @Override
@@ -598,38 +654,43 @@ public abstract class SpiritWorkerBlockEntity extends BlockEntity implements Men
         return ClientboundBlockEntityDataPacket.create(this);
     }
 
-    private final class AutomationView implements IItemHandler {
+    private final class AutomationView implements ResourceHandler<ItemResource> {
         @Override
-        public int getSlots() {
-            return inventory.getSlots();
+        public int size() {
+            return SLOT_COUNT;
         }
 
         @Override
-        public ItemStack getStackInSlot(int slot) {
-            return inventory.getStackInSlot(slot);
+        public ItemResource getResource(int index) {
+            return inventory.getResource(index);
         }
 
         @Override
-        public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-            if (slot != INPUT_SLOT || !canProcess(stack)) {
-                return stack;
+        public long getAmountAsLong(int index) {
+            return inventory.getAmountAsLong(index);
+        }
+
+        @Override
+        public long getCapacityAsLong(int index, ItemResource resource) {
+            return inventory.getCapacityAsLong(index, resource);
+        }
+
+        @Override
+        public boolean isValid(int index, ItemResource resource) {
+            return index == INPUT_SLOT && canProcess(resource.toStack());
+        }
+
+        @Override
+        public int insert(int index, ItemResource resource, int amount, TransactionContext transaction) {
+            if (index != INPUT_SLOT || resource.isEmpty() || !canProcess(resource.toStack())) {
+                return 0;
             }
-            return inventory.insertItem(slot, stack, simulate);
+            return inventory.insert(index, resource, amount, transaction);
         }
 
         @Override
-        public ItemStack extractItem(int slot, int amount, boolean simulate) {
-            return slot == INPUT_SLOT ? ItemStack.EMPTY : inventory.extractItem(slot, amount, simulate);
-        }
-
-        @Override
-        public int getSlotLimit(int slot) {
-            return inventory.getSlotLimit(slot);
-        }
-
-        @Override
-        public boolean isItemValid(int slot, ItemStack stack) {
-            return slot == INPUT_SLOT && canProcess(stack);
+        public int extract(int index, ItemResource resource, int amount, TransactionContext transaction) {
+            return index == INPUT_SLOT ? 0 : inventory.extract(index, resource, amount, transaction);
         }
     }
 }

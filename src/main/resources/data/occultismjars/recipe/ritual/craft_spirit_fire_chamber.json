@@ -15,7 +15,7 @@
       "item": "occultism:spirit_attuned_gem"
     },
     {
-      "tag": "c:glass_blocks/colorless"
+      "item": "occultism:otherstone"
     }
   ],
   "pentacle_id": "occultism:summon_foliot",

@@ -1,5 +1,7 @@
 # Occultism Jars
 
+![Occultism Jars](.github/banner.jpg)
+
 [![build](https://github.com/Ribeiro-73/occultism-jars/actions/workflows/build.yml/badge.svg)](https://github.com/Ribeiro-73/occultism-jars/actions/workflows/build.yml)
 
 An [Occultism](https://modrinth.com/mod/occultism) addon for NeoForge 1.21.1.

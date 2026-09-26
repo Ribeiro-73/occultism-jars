@@ -6,7 +6,7 @@
     "minecraft:flint_and_steel",
     "occultism:datura",
     "occultism:spirit_attuned_gem",
-    "#c:glass_blocks/colorless"
+    "occultism:otherstone"
   ],
   "pentacle_id": "occultism:summon_foliot",
   "result": {

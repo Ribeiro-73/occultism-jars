@@ -28,7 +28,7 @@ Full documentation — setup, automation, config, tuning and an FAQ — is on th
   using the next one; it also cooks raw food and turns Cursed Honey into a Sweet
   Honey Heart. Harmful and instant effects are ignored. Only items the spirit can
   actually process go in.
-- **Spirit Fire Chamber.** A glass case that keeps Occultism's spirit fire burning.
+- **Spirit Fire Chamber.** An otherstone, otherrock and gold frame that keeps Occultism's spirit fire burning.
   Right-click it with Datura, then light it with a flint and steel; chalk changes
   the colour, like the real fire. Hoppers and pipes feed it and the
   `occultism:spirit_fire` result is ready to pull out at once. Dropping items on

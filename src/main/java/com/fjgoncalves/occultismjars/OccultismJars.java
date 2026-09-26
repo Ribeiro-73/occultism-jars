@@ -80,7 +80,7 @@ public final class OccultismJars {
             props -> props
                     .mapColor(MapColor.COLOR_PURPLE)
                     .strength(1.5F)
-                    .sound(SoundType.GLASS)
+                    .sound(SoundType.STONE)
                     .noOcclusion()
                     .lightLevel(state -> SpiritFireChamberBlock.isLit(state) ? 12 : 0));
 

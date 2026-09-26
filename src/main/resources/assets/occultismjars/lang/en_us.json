@@ -32,7 +32,7 @@
   "tooltip.occultismjars.spirit_fire_chamber.light": "Right-click it with Datura, then light it with a flint and steel. Chalk changes the fire's colour",
   "tooltip.occultismjars.spirit_fire_chamber.use": "Hoppers and pipes feed it; the spirit fire result is ready to pull out right away",
   "item.occultismjars.ritual_dummy.craft_spirit_fire_chamber": "Ritual: Craft Spirit Fire Chamber",
-  "item.occultismjars.ritual_dummy.craft_spirit_fire_chamber.tooltip": "A glass case that keeps spirit fire burning for automated crafting.",
+  "item.occultismjars.ritual_dummy.craft_spirit_fire_chamber.tooltip": "An otherstone, otherrock and gold frame that keeps spirit fire burning for automated crafting.",
   "ritual.occultismjars.craft_spirit_fire_chamber.started": "Starting the ritual: Craft Spirit Fire Chamber.",
   "ritual.occultismjars.craft_spirit_fire_chamber.finished": "Ritual completed successfully: Craft Spirit Fire Chamber.",
   "ritual.occultismjars.craft_spirit_fire_chamber.interrupted": "Interruption in the ritual: Craft Spirit Fire Chamber.",

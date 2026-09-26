@@ -28,7 +28,7 @@ ${mod_description}
 [[dependencies.${mod_id}]]
     modId="occultism"
     type="required"
-    versionRange="[1.254.0,)"
+    versionRange="[1.249.0,)"
     ordering="AFTER"
     side="BOTH"
 

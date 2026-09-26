@@ -6,8 +6,9 @@
     {
       "neoforge:ingredient_type": "neoforge:components",
       "items": "occultism:soul_gem",
-      "components": {},
-      "strict": true
+      "components": {
+        "!minecraft:entity_data": {}
+      }
     },
     {
       "neoforge:ingredient_type": "neoforge:components",
